@@ -1,0 +1,112 @@
+# -*- indent-tabs-mode: nil -*-
+#
+# Assign Policies to the S3 Buckets
+#
+VERSION(1.8.1)
+#
+# the public and private buckets have to be created ahead of time
+#
+# notes
+#    -- provision_aws needs the private bucket to exist
+#
+#
+
+{
+  TEMPLATE(`Assign Policies to S3 Buckets'),
+
+  "Parameters" : {
+    paramS3Bucket(PublicBucketName, `'),
+    paramS3Bucket(PrivateBucketName, `'),
+    paramString(AppRole,`iam app role'),
+    paramString(BastionRole, `iam bastion role'),
+    paramString(NatRole, `iam nat role'),
+    paramDomain(Domain,`app domain', `devops.dev.cloud.synchronoss.net'),
+    paramString(Project, `project',`NOPROJECT'),
+    paramString(Environment, `environment',`NOENVIRONMENT')
+  },
+
+  "Resources" : {
+
+    # create the public bucket
+
+#    S3Bucket(PublicBucket, &PublicBucketName),
+
+    "PublicBucketPolicyConfig" : {
+      "Type" : "AWS::S3::BucketPolicy",
+      "Properties" : {
+        "PolicyDocument": {
+          "Version"      : "2008-10-17",
+          "Id"           : "PubAdmin",
+          "Statement"    : [
+            {"Sid"        : "PublicRead",
+            "Action"     : ["s3:GetObject"],
+            "Effect"     : "Allow",
+            "Resource"   : { "Fn::Join" : ["",
+    	    		      ["arn:aws:s3:::",
+    			      cfnRef(PublicBucketName),
+    			      "/*"]] },
+            "Principal"  : {
+    	      "AWS": "*"
+    	      }
+            }
+          ]
+        },
+        "Bucket" : cfnRef(PublicBucketName)
+    	}
+      },
+
+    # secure the private bucket
+
+    "PrivateBucketPolicyConfig" : {
+      "Type" : "AWS::S3::BucketPolicy",
+      "Properties" : {
+        "PolicyDocument": {
+          "Version"      : "2008-10-17",
+          "Id"           : "Admin",
+          "Statement"    : [
+            {
+              "Sid": "AppRoleAccess",
+              "Action": ["s3:*"],
+              "Effect": "Allow",
+              "Resource": cfnPaste("arn:aws:s3:::", &PrivateBucketName, "/*"),
+              "Principal": {
+                "AWS": cfnPaste("arn:aws:iam::", &AWS::AccountId,
+                                                 ":role/", &AppRole)
+              }
+	    }
+            ,
+            {
+              "Sid"        : "BastionRoleAccess",
+              "Action"     : ["s3:*"],
+              "Effect"     : "Allow",
+              "Resource": cfnPaste("arn:aws:s3:::", &PrivateBucketName, "/*"),
+              "Principal": {
+                "AWS": cfnPaste("arn:aws:iam::", &AWS::AccountId,
+                                                   ":role/", &BastionRole)
+              }
+            }
+            ,
+            {
+              "Sid"        : "NatRoleAccess",
+              "Action"     : ["s3:*"],
+              "Effect"     : "Allow",
+              "Resource": cfnPaste("arn:aws:s3:::", &PrivateBucketName, "/*"),
+              "Principal": {
+                "AWS": cfnPaste("arn:aws:iam::", &AWS::AccountId,
+                                                   ":role/", &NatRole)
+              }
+            }
+
+          ]
+        },
+        "Bucket" : cfnRef(PrivateBucketName)
+      }
+    }
+  },
+
+  "Outputs": {
+    output(PublicBucketPolicyConfig, `Access Policy for the Public Bucket'),
+    output(PrivateBucketPolicyConfig, `Access Policy for the Public Bucket')
+  }
+
+}

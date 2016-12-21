@@ -1,0 +1,41 @@
+# -*- indent-tabs-mode: nil -*-
+#
+# create a security group for the nat devices
+VERSION(1.5.1)
+#
+
+INCLUDE(cf4/sncr-cidrs.m4)
+
+{
+  TEMPLATE(`NAT Security Group'),
+
+  "Parameters" : {
+
+    paramVpc(VpcId, `VPC ID', `vpc-00000000'),
+    paramCidrBlock(VpcCidr, `'),
+
+    paramDomain(Domain, `app domain', `devops.dev.cloud.synchronoss.net'),
+    paramString(Project, `project', `NOPROJECT'),
+    paramString(Environment, `environment', `NOENVIRONMENT')
+  },
+
+  "Resources" : {
+
+    mkVpcSecurityGroup(NatSG, &VpcId, `Nat security group'),
+    addSecurityGroupRule(NatSG, vpcicmp, in, "icmp", "-1", &VpcCidr),
+    addSecurityGroupRule(NatSG, ntp, in, "udp", "123", &VpcCidr),
+    addSecurityGroupRule(NatSG, http, in, "tcp", "80", &VpcCidr),
+    addSecurityGroupRule(NatSG, https, in, "tcp", "443", &VpcCidr),
+    addSecurityGroupRule(NatSG, smtp, in, "tcp", "25", &VpcCidr),
+    addSecurityGroupRule(NatSG, smtps, in, "tcp","587", &VpcCidr),
+    addSecurityGroupRule(NatSG, ntp, out, "udp", "123", "allCIDR"),
+    addSecurityGroupRule(NatSG, http, out, "tcp", "80", "allCIDR"),
+    addSecurityGroupRule(NatSG, https, out, "tcp", "443", "allCIDR"),
+    addSecurityGroupRule(NatSG, smtp, out, "tcp", "25", "allCIDR"),
+    addSecurityGroupRule(NatSG, smtps, out, "tcp", "587", "allCIDR")
+  },
+
+  "Outputs" : {
+    output(NatSG,`NAT Security Group')
+  }
+}

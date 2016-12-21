@@ -1,0 +1,18 @@
+
+I have just committed, tagged, and pushed  version 1.0.0 of our cft-core template library for AWS CloudFormation.
+
+The git repository is in git.synchronoss.net:/git/devops/aws/libs/cft-core.git
+
+You can clone this repository, and then copy it into a new project.  This release is at git tag v1.0.0
+
+Do not try to push back to the git repo! We would like to use JIRA for reporting issues and requesting enhancements.
+
+There is only minimal documentation right now in a README file.  There is an (empty for now) Confluence page too at http://confluence.synchronoss.net:8085/display/DEVOPS/cft-core+--+CloudFormation+Template+Core+Library which I will begin to populate.  This page is in the “AWS Architecture” area of the DevOps space at http://confluence.synchronoss.net:8085/display/DEVOPS/AWS+Architecture?src=contextnavchildmode
+
+I will be happy to answer any questions.
+
+Several of you have already seen how they work in conjunction with provision_aws at various levels of development.  They were most recently demonstrated in the Seattle office for some training and then used to launch prod and uat environments for a new project.
+
+This set of templates was originally used for the devops OpsHub proof of concept, and then applied to the ContentHub project. If I made any translation mistakes when removing opshubs and contenthub references, please let me know and I will fix that.  I am sure there will be some point releases as I add documentation and fix minor things like that.
+
+These templates, in conjunction with the provisioning tools (provision_aws and ctgen), and a properly populated chef server have proven to be a quick, powerful, and reliable way to spin up AWS project environments.

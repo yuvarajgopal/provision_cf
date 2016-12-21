@@ -1,0 +1,79 @@
+# -*- indent-tabs-mode: nil -*-
+#
+# Create IAM roles for server access
+#
+VERSION(sncr-bda/1.0.0)
+#
+{
+    TEMPLATE(`Create IAM Roles'),
+
+    "Parameters" : {
+      paramString(Project, `project',`NOPROJECT'),
+      paramString(Environment, `environment',`NOENVIRONMENT')
+    },
+
+    "Resources": {
+
+      "User": {
+        "Type": "AWS::IAM::User",
+        "Properties": {
+          "Path": "/"
+        }
+      },
+
+     mkAccessKey(Key, User),
+
+    "LogicmonIamPolicy": {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "logicmonRO",
+        "Users" : [ cfnRef(User) ],
+        "PolicyDocument" : {
+        "Version": "2012-10-17",
+        "Statement" : [
+           {
+             "Action": [
+               "cloudwatch:Describe*","cloudwatch:Get*","cloudwatch:List*",
+               "dynamodb:DescribeTable","dynamodb:ListTables",
+               "ec2:Describe*",
+               "s3:List*","s3:GetObject","s3:GetObjectVersion",
+               "s3:getBucketTagging","s3:GetBucketLocation",
+               "autoscaling:DescribeAutoScalingGroups",
+               "elasticache:DescribeCacheClusters",
+               "elasticache:ListTagsForResource",
+               "elasticloadbalancing:DescribeLoadBalancers",
+               "elasticloadbalancing:describeTags",
+               "kinesis:DescribeStream","kinesis:listStreams",
+               "kinesis:listTagsForStream",
+               "rds:DescribeDBInstances","rds:listTagsForResource",
+               "redshift:DescribeClusters",
+               "route53:Get*","route53:listHealthChecks",
+               "route53:listTagsForResources",
+               "sns:listTopics","sns:getTopicAttributes",
+               "ebs:describeVolumes",
+               "sqs:GetQueueAttributes","sqs:GetQueueUrl","sqs:listQueues"
+               ],
+             "Effect": "Allow",
+             "Resource": "*"
+           }
+         ]
+         }
+      }
+   }
+  },
+
+  "Outputs": {
+
+    outputValue(LogicmonIamPolicy),
+    outputValue(User),
+    "AccessKeyid" : {
+      "Description": "AccessKeyId for the Logicmon User",
+      "Value": cfnRef(Key)
+    },
+    "SecretAccessKey": {
+      "Description": "SecretAccessKey for the Logicmon User",
+      "Value": { "Fn::GetAtt": [ "Key", "SecretAccessKey" ] }
+    }
+  }
+
+}

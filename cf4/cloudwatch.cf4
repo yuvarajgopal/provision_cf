@@ -1,0 +1,35 @@
+# -*- indent-tabs-mode: nil -*-
+#
+#  create cloud watch alert notification topics(s)
+#
+VERSION(1.4.0)
+#
+
+{
+    TEMPLATE(`Create CloudWatch Alert Topics'),
+
+    "Parameters" : {
+
+      paramEmailAddr(OperatorEmail, `email distro for operations'),
+      paramEmailAddr(DbaEmail, `email distro for operations')
+
+    },
+
+
+  "Resources": {
+
+    mkSnsTopic(OpsAlertsTopic, "email", &OperatorEmail),
+
+    mkSnsTopic(ScalingAlertsTopic, "email", &OperatorEmail),
+
+    mkSnsTopic(DbAlertsTopic, "email", &DbaEmail)
+
+
+},
+
+  "Outputs": {
+    output(OpsAlertsTopic,`Alerts Topic'),
+    output(ScalingAlertsTopic,`AutoScaling Notifications'),
+    output(DbAlertsTopic,`Database Notifications')
+  }
+}

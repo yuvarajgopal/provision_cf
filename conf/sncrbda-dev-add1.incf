@@ -1,0 +1,51 @@
+
+
+################################
+#
+#  Add 1 node to the dev mapr cluster
+#
+#
+#  This incf file is meant to be used in conjunction with the -dev.incf
+#
+#  Note that the enviropment is listed as dev
+#    That is so it can reference all the existing dev stacks and resources
+#
+#  It will typically be called with a command line like
+#    provision_aws -c sncrbda-dev-add1.conf dev
+#
+#
+#
+
+
+[DEV]
+
+# most of these settings must match the -dev conf
+
+AWS_PROFILE=sncr-bda
+PRIVATE_BUCKET=private.dev.sncrbda.sncr
+
+PrivateBucketName=private.dev.sncrbda.sncr
+PublicBucketName=public.dev.sncrbda.sncr
+Domain=sncrbda.dev.cloud.synchronoss.net
+Environment=dev
+KeyPair=sncrbda-dev
+VpcCidr=10.238.42.0/23
+
+ChefEnv=sncrbda-dev
+
+#########################################################
+#
+# XDF Subnet Resources
+#
+#########################################################
+
+# try to build a single node
+# the cluster must already exist.
+# this mostly depends on all the defaults.
+#
+
+RUN_MAPR_NODE_STACK=1
+MAPR_NODE_CF_PARAM_AppInstanceType=$MaprNodeInstanceType
+
+# create the elbs and their security groups for the consoles
+# see [defaults] for details

@@ -1,0 +1,5 @@
+2014-11-04  Stephen G. Corbesero  <stephen.corbesero@synchronoss.com>
+
+	* opshub.conf: rename old security groups template to networks-sgs
+	             : move bastion stanzas earlier
+	             : change sgs for nat's to use the new NatSG

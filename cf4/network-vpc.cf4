@@ -1,0 +1,57 @@
+# -*- indent-tabs-mode: nil -*-
+#
+VERSION(1.6.2)
+#
+{
+   TEMPLATE(`Create VPC'),
+
+#
+# make the top-level network entities
+#  VPC
+#  publid route table
+#  (stub) private route tables
+
+
+  "Parameters" : {
+    paramDomain(Domain, `Domain'),
+    paramCidrBlock(VpcCidr,`VPC CIDR', `0.0.0.0/0'),
+    paramString(Project, `project',`NOPROJECT'),
+    paramString(Environment, `environment',`NOENVIRONMENT'),
+    paramVpnGatewayType(VpnGwType,`')
+    },
+
+  "Conditions" : {
+
+    "NeedsVpnGateway" : {
+      "Fn::Not" : [ {
+        "Fn::Equals" : [ cfnRef(VpnGwType), "none" ]
+      }]
+    }
+
+  },
+
+  "Resources" : {
+
+    # make the VPC and set its DHCP options
+    mkVpc(VpcId, &VpcCidr, `cfnPaste(&Project, "-", &Environment)'),
+    mkDhcpOptions(vpcdhcpoptions, &Domain, "AmazonProvidedDNS"),
+    assocDhcpOptions2Vpc(&vpcdhcpoptions, &VpcId),
+
+    # make and attach the internet gateway
+    mkInternetGateway(IGW),
+    attInternetGateway2Vpc(igwAttachment, &IGW, &VpcId),
+
+    # conditionally make and attach the vpn gateway
+    CONDBLOCK(NeedsVpnGateway)
+    mkVpnGateway(SncrVpnGW, &VpnGwType),
+    attVpnGateway2Vpc(vgwAttachment, &SncrVpnGW, &VpcId)
+    CONDBLOCK()
+
+
+  },
+
+  "Outputs" : {
+    output(VpcId, `AWS ID for VPC'),
+    output(IGW,`Internet Gateway Id')
+  }
+}

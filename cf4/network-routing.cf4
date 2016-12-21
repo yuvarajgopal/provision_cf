@@ -1,0 +1,64 @@
+# -*- indent-tabs-mode: nil -*-
+#
+VERSION(1.6.4)
+#
+{
+    TEMPLATE(`Manage Routing Tables'),
+
+#
+# currently, the routing tables are created in the vpc template
+# that should be moved to here
+#
+
+  "Parameters" : {
+    paramVpc(VpcId, `VPC ID'),
+    paramCidrBlock(VpcCidr,`VPC CIDR', `0.0.0.0/0'),
+    paramIgw(InternetGW),
+    paramVpcPeer(VpcPeerID),
+    paramString(NatGwAz1, `', `none'),
+    paramString(NatGwAz2, `', `none'),
+    paramCidrBlock(VpcPeerCIDR,`Peer CIDR', `0.0.0.0/0'),
+    paramString(Project, `project',`NOPROJECT'),
+    paramString(Environment, `environment',`NOENVIRONMENT')
+    },
+
+  "Conditions" : {
+    "HasVpcPeer": cfnNotEquals(&VpcPeerID, "none"),
+    "HasNatGwAz1": cfnNotEquals(&NatGwAz1, "none"),
+    "HasNatGwAz2": cfnNotEquals(&NatGwAz2, "none")
+  },
+
+  "Resources" : {
+
+    mkRouteTable(PublicRT, &VpcId),
+    mkGatewayRoute(internet, &PublicRT, "0.0.0.0/0", &InternetGW),
+
+    # now make the private route tables
+    # but they can't be populated until the dmz is built
+    # unless I make the ENI's here.  hmmmm....
+
+    mkRouteTable(PrivateAz1RT, &VpcId),
+
+    mkRouteTable(PrivateAz2RT, &VpcId),
+
+#    CONDBLOCK(HasNatGwAz1)
+#    CONDBLOCK(HasNatGwAz1)
+#    CONDBLOCK()
+
+
+    # if there is a VpcPeer, add its Cidrblock to all the route tables
+
+    CONDBLOCK(HasVpcPeer)
+    mkVpcPeerRoute(publicRoute2VpcPeer, &PublicRT, &VpcPeerCIDR, &VpcPeerID),
+    mkVpcPeerRoute(Az1VpcPeer, &PrivateAz1RT, &VpcPeerCIDR, &VpcPeerID),
+    mkVpcPeerRoute(Az2VpcPeer, &PrivateAz2RT, &VpcPeerCIDR, &VpcPeerID)
+    CONDBLOCK()
+
+  },
+
+  "Outputs" : {
+    output(PublicRT, `Route Table for Public Subnets '),
+    output(PrivateAz1RT, `Route Table for Private Subnets in AZ1'),
+    output(PrivateAz2RT, `Route Table for Private Subnets in AZ2')
+  }
+}

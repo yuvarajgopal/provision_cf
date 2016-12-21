@@ -1,0 +1,80 @@
+#  -*- indent-tabs-mode: nil -*-
+#
+#
+# create an simple AWS ELB
+#
+VERSION(1.0.0)
+#
+INCLUDE(cf4/sncr-cidrs.m4)
+#
+
+{
+  TEMPLATE(`Simple ELB'),
+
+  "Parameters" : {
+    paramString(ElbCNAME,`DNS CNAME for the ELB'),
+    paramPort(InPort,`',80),
+    paramPort(OutPort,`',8080),
+
+    paramSecurityGroups(SecurityGroups,`'),
+    paramInstances(Instances, `'),
+
+    paramOneOf(ElbScheme, `', `"internet-facing","internal"', `internet-facing'),
+    paramString(OpsAlertsTopic, `'),
+
+    paramVpc(VpcId, `VPC ID'),
+    paramAZ(AZ1, `'),
+    paramAZ(AZ2, `'),
+    paramSubnets(Subnets),
+
+    paramBootPriority(1),
+    paramPurpose(infrastructure),
+
+    paramDomain(Domain,`app domain', `devops.dev.cloud.synchronoss.net'),
+    paramString(Project, `project',`NOPROJECT'),
+    paramString(Environment, `environment',`NOENVIRONMENT')
+  },
+
+  "Resources" : {
+
+    "SimpleELB" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+        "SecurityGroups" : cfnRef(SecurityGroups),
+        "Subnets" : cfnRef(Subnets),
+        "Scheme": cfnRef(ElbScheme),
+        "Instances": cfnRef(Instances),
+        "Listeners" : [
+                { "LoadBalancerPort": cfnRef(InPort),
+                  "Protocol" : "TCP",
+                  "InstancePort": cfnRef(OutPort),
+                  "InstanceProtocol": "TCP"
+                }
+         ],
+         "HealthCheck" : {
+           "Target" : cfnPaste("TCP:", cfnRef(InPort)),
+           "HealthyThreshold" : "2",
+           "UnhealthyThreshold" : "6",
+           "Interval" : "30",
+           "Timeout" : "10"
+         },
+         "ConnectionDrainingPolicy" : {
+           "Enabled" : "true"
+         },
+         "CrossZone" : "true"
+     }
+    },
+
+    r53Cname(ElbDNS, &ElbCNAME, &Domain,
+             `{ "Fn::GetAtt" : [ "SimpleELB", "DNSName"]}')
+
+  },
+
+  "Outputs" : {
+    "ElbUrl" : {
+      "Value" : cfnPaste("https://", &ElbCNAME, ".", &Domain,
+                          ":", &InPort)
+     }
+  }
+
+}

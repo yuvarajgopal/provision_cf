@@ -1,0 +1,72 @@
+
+[DEV]
+
+################################
+#
+#  Add 1 node to Alexey's real-time cluster
+#
+#
+#  This incf file is meant to be used in conjunction with the -dev.incf
+#
+#  Note that the environment is listed as dev
+#    That is so it can reference all the existing dev stacks and resources
+#
+#  It should be called with the following command line
+#    provision_aws -c sncrbda-dev-rt-add1.conf dev
+#
+#
+#  But ...
+#    * The resources that it creates need to be launched with different
+#      stack names, specifically SNRCBDADEV-RT-...
+#
+#    * the nodes will be in the sncrbda-dev-rt chef environment
+#
+
+
+############################################################
+## most of this file must not be changed.
+## the settings are form the generic dev environment
+############################################################
+
+AWS_PROFILE=sncr-bda
+PRIVATE_BUCKET=private.dev.sncrbda.sncr
+
+PrivateBucketName=private.dev.sncrbda.sncr
+PublicBucketName=public.dev.sncrbda.sncr
+Domain=sncrbda.dev.cloud.synchronoss.net
+Environment=dev
+KeyPair=sncrbda-dev
+VpcCidr=10.238.42.0/23
+
+ChefEnv=sncrbda-dev-rt
+
+# peer to US-EAST-1 IVPC
+VpcPeerID=pcx-95c169fc
+VpcPeerCIDR=10.236.100.0/23
+
+#########################################################
+#
+# XDF Subnet Resources
+#
+#########################################################
+
+MaprNodeInstanceType=r3.xlarge
+RtfeNodeInstanceType=m3.xlarge
+
+# the following must be coordinated in the chef environment file
+# cldb must point to a node
+# zk must point to some number of nodes
+# the web server must be on a node
+# the order is important
+
+RUN_MAPR_NODE_STACK=1
+MAPR_NODE_STACK_NAME=${STACK_PREFIX}-RT-MAPR-NODE
+MAPR_NODE_CF_PARAM_AppInstanceType=$MaprNodeInstanceType
+MAPR_NODE_CF_PARAM_NodeName=rtmapr
+
+
+# vv I don't think this will ever be needed vv
+
+RUN_RTFE_NODE_STACK=0
+RTFE_NODE_STACK_NAME=${STACK_PREFIX}-RT-RTFE-NODE
+RTFE_NODE_CF_PARAM_NodeName=rtfe

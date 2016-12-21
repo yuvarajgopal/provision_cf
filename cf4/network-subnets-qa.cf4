@@ -1,0 +1,117 @@
+# -*- indent-tabs-mode: nil -*-
+#
+VERSION(1.5.1)
+#
+
+{
+  TEMPLATE(`Subnets for QA'),
+
+  "Parameters" : {
+
+    paramString(Project, `project',`NOPROJECT'),
+    paramString(Environment, `environment',`NOENVIRONMENT'),
+
+    paramAZ(AZ1, `First Availability Zone', `us-east-1a'),
+    paramAZ(AZ2, `Second Availability Zone', `us-east-1b'),
+
+    paramVpc(VpcId, `VPC ID', `vpc-00000000'),
+
+    paramNetworkAcl(DefaultAcl,`'),
+    paramNetworkAcl(FullPublicAccessAcl, `'),
+
+    paramRouteTable(PublicRT, `public route table for vpc'),
+    paramRouteTable(PrivateAz1RT, `private route table for vpc AZ1'),
+    paramRouteTable(PrivateAz2RT, `private route table for vpc AZ2'),
+
+    paramBoolean(PublicXdfSubnets, `', `True')
+   },
+
+  "Mappings" : {
+
+    INCLUDE(cf4/subnets-qa.map)
+
+  },
+
+  "Conditions": {
+
+    "MakeXdfSubnetsPublic": cfnEquals(&PublicXdfSubnets, "True"),
+    "MakeXdfSubnetsPrivate": cfnEquals(&PublicXdfSubnets, "False")
+
+  },
+
+  "Resources" : {
+
+###########################################################################
+#
+# AZ1 Subnets
+#
+###########################################################################
+
+  mkVpcSubnet(DmzAZ1Subnet, &VpcId, `"DMZ-AZ1"', &AZ1),
+    assocSubnet2RouteTable(dmzaz1toPublicRTassoc, &DmzAZ1Subnet, &PublicRT),
+    assocNetworkAcl2Subnet(&DefaultAcl,&DmzAZ1Subnet),
+
+  mkVpcSubnet(AccessAZ1Subnet, &VpcId, `"ACCESS-AZ1"', &AZ1),
+    assocSubnet2RouteTable(accessaz1toPublicRTassoc,
+                           &AccessAZ1Subnet, &PublicRT),
+    assocNetworkAcl2Subnet(&FullPublicAccessAcl, &AccessAZ1Subnet),
+
+  mkVpcSubnet(XdfAZ1Subnet, &VpcId, `"XDF-AZ1"', &AZ1, "true"),
+    CONDBLOCK(MakeXdfSubnetsPrivate)
+    assocSubnet2RouteTable(xdfaz1toPrivateRTassoc,
+                           &XdfAZ1Subnet, &PrivateAz1RT),
+    CONDBLOCK(MakeXdfSubnetsPublic)
+    assocSubnet2RouteTable(xdfaz1toPublicRTassoc,
+                           &XdfAZ1Subnet, &PublicRT),
+    CONDBLOCK()
+    assocNetworkAcl2Subnet(&DefaultAcl, &XdfAZ1Subnet),
+
+  mkVpcSubnet(ApAZ1Subnet, &VpcId, `"AP-AZ1"', &AZ1),
+    assocSubnet2RouteTable(apaz1toPrivateRTassoc,
+                           &ApAZ1Subnet, &PrivateAz1RT),
+    assocNetworkAcl2Subnet(&DefaultAcl, &ApAZ1Subnet),
+
+  mkVpcSubnet(MgmtAZ1Subnet, &VpcId, `"MGMT-AZ1"', &AZ1),
+    assocSubnet2RouteTable(mgmtaz1toPublicRTassoc, &MgmtAZ1Subnet, &PrivateAz1RT),
+    assocNetworkAcl2Subnet(&DefaultAcl,&MgmtAZ1Subnet)
+
+
+###########################################################################
+#
+# AZ2 Subnets
+#
+# for future expansion
+#
+###########################################################################
+
+  # mkVpcSubnet(DmzAZ2Subnet, &VpcId, `"DMZ-AZ2"', &AZ2),
+  #   assocSubnet2RouteTable(dmzaz2toPublicRTassoc, &DmzAZ2Subnet, &PublicRT),
+  #   assocNetworkAcl2Subnet(&DefaultAcl,&DmzAZ2Subnet),
+
+  # mkVpcSubnet(AccessAZ2Subnet, &VpcId, `"ACCESS-AZ2"', &AZ2),
+  #   assocSubnet2RouteTable(accessaz2toPublicRTassoc,
+  #                          &AccessAZ2Subnet, &PublicRT),
+  #   assocNetworkAcl2Subnet(&FullPublicAccessAcl, &AccessAZ2Subnet),
+
+  # mkVpcSubnet(XdfAZ2Subnet, &VpcId, `"XDF-AZ2"', &AZ2, "true"),
+  #   CONDBLOCK(MakeXdfSubnetsPrivate)
+  #   assocSubnet2RouteTable(xdfaz2toPrivateRTassoc,
+  #                          &XdfAZ2Subnet, &PrivateAz2RT),
+  #   CONDBLOCK(MakeXdfSubnetsPublic)
+  #   assocSubnet2RouteTable(xdfaz2toPublicRTassoc,
+  #                          &XdfAZ2Subnet, &PublicRT),
+  #   CONDBLOCK()
+  #   assocNetworkAcl2Subnet(&DefaultAcl, &XdfAZ2Subnet),
+
+  # mkVpcSubnet(ApAZ2Subnet, &VpcId, `"AP-AZ2"', &AZ2),
+  #   assocSubnet2RouteTable(apaz2toPrivateRTassoc,
+  #                          &ApAZ2Subnet, &PrivateAz2RT),
+  #   assocNetworkAcl2Subnet(&DefaultAcl, &ApAZ2Subnet),
+
+  # mkVpcSubnet(MgmtAZ2Subnet, &VpcId, `"MGMT-AZ2"', &AZ2),
+  #   assocSubnet2RouteTable(mgmtaz2toPublicRTassoc, &MgmtAZ2Subnet, &PrivateAz2RT),
+  #   assocNetworkAcl2Subnet(&DefaultAcl,&MgmtAZ2Subnet)
+
+    }
+
+  }

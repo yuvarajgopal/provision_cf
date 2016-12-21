@@ -1,0 +1,103 @@
+# -*- indent-tabs-mode: nil -*-
+
+#
+VERSION(1.8.1)
+#
+INCLUDE(cf4/sncr-cidrs.m4)
+#
+{
+   TEMPLATE(`Network ACLs'),
+
+
+  "Parameters" : {
+    paramVpc(VpcId, `VPC ID', `vpc-00000000'),
+    paramCidrBlock(VpcCidr,`VPC CIDR', `0.0.0.0/0'),
+
+    paramString(Project, `project',`NOPROJECT'),
+    paramString(Environment, `environment',`NOENVENIRONMENT')
+    },
+
+  "Resources" : {
+
+    mkNetworkAcl(DefaultAcl, cfnRef(VpcId)),
+
+      "AllowAllOutboundACL" : {
+        "Type" : "AWS::EC2::NetworkAclEntry",
+        "Properties" : {
+          "NetworkAclId": cfnRef(DefaultAcl),
+          "Egress" : "true",
+          "RuleAction" : "Allow",
+          "RuleNumber" : "1000",
+          "Protocol" : "-1",
+          "CidrBlock" : "allCIDR",
+          "Icmp" : { "Code" : "-1", "Type" : "-1" },
+          "PortRange" : { "From" : "0", "To" : "65535" }
+        }
+      },
+
+      "AllowLocalIcmpInboundACL" : {
+        "Type" : "AWS::EC2::NetworkAclEntry",
+        "Properties" : {
+          "NetworkAclId": cfnRef(DefaultAcl),
+          "Egress" : "false",
+          "RuleAction" : "Allow",
+          "RuleNumber" : "10",
+          "Protocol" : "1",
+          "CidrBlock" : cfnRef(VpcCidr),
+          "Icmp" : { "Code" : "-1", "Type" : "-1" }
+        }
+      },
+
+      aclAllowIn(AllowLocalUdpInboundACL, &DefaultAcl, 11,
+                                           UDPproto, 0, &VpcCidr, 65535),
+
+      aclAllowIn(AllowLocalTcpInboundACL, &DefaultAcl,
+                 12, TCPproto, 0, &VpcCidr, 65535),
+
+      aclAllowIn(AllowAllNtpInboundACL, &DefaultAcl,
+                 "220", "17", NTPport, "allCIDR"),
+
+      aclAllowIn(allhttpACL, &DefaultAcl,
+                 "800", "6", "80", "allCIDR"),
+
+      aclAllowIn(allhttpsACL, &DefaultAcl,
+                 "801", "6", "443", "allCIDR"),
+
+
+      aclAllowIn(AllowAllTcpEphemeral, &DefaultAcl, 1000,
+                                  6, 1024, "allCIDR", 65535),
+
+      aclAllowIn(AllowAllUdpEphemeral, &DefaultAcl, 1010,
+                                  17, 1024, "allCIDR", 65535),
+
+      # only allow limited ssh in
+
+      define(`_rule', `500')
+      foreach(`site',
+        (pabetExt, njbrwExt, ivpcUsEast1, fihelExt, india3Ext,
+      india1Ext, iedub2Ext, galwayExt),
+        `aclAllowIn(Allow`'site`'SshInbound,
+                    &DefaultAcl,
+                    "_rule", "6", "22", "site`'CIDR"),
+define(`_rule',incr(_rule))dnl
+        ')
+undefine(`_rule')
+
+
+
+    mkNetworkAcl(FullPublicAccessAcl, cfnRef(VpcId)),
+
+      aclAllowIn(FpaAllowAllInboundAcl, &FullPublicAccessAcl, 1000,
+                                        "-1", 0, "allCIDR", 65535),
+      aclAllowOut(FpaAllowAllOutboundAcl, &FullPublicAccessAcl, 1000,
+                                        "-1", 0, "allCIDR", 65535)
+
+  },
+
+  "Outputs": {
+    output(DefaultAcl,`Default NETACL'),
+    output(FullPublicAccessAcl, `ACL Giving FULL in/out access')
+  }
+
+
+}

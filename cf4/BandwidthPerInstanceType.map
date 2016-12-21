@@ -1,0 +1,95 @@
+# -*- indent-tabs-mode: nil -*-
+#
+
+# these values assume the following interpretations
+# low, moderate, high are fractions of a 1 Gbit/s (1000 Mbps) link
+#
+#   low      ~=  250 Mbit/s
+#   moderate ~=  500 Mbit/s
+#   high     ~=  900 Mbit/s
+#   10gb     ~= 9000 Mbit/s
+#
+# bigger instances assert a 10 Gbit/s link
+
+#  calculate thresholds based on > 80% is high (4/5)
+#                                < 20% is low  (1/5)
+
+# let m4 do the math
+
+divert(-1)
+define(`BW_LOW',  `250')
+define(`BW_MOD',  `500')
+define(`BW_HIGH', `900')
+define(`BW_10GB', `9000')
+
+# it seems like network performance is a function of the instance size,
+# not the generation
+# exception....  c4.xlarge is high, other xlarges are just mod
+
+define(`I_SMALL', BW_LOW)
+define(`I_MEDIUM', BW_MOD)
+define(`I_LARGE', BW_MOD)
+define(`I_XLARGE', BW_HIGH)
+define(`I_2XLARGE', BW_HIGH)
+define(`I_4XLARGE', BW_HIGH)
+define(`I_8XLARGE', BW_10GB)
+
+# calculate the high and low water marks as number of bytes
+# the cloudwatch reports NetworkIn and NetworkOut as
+#     the number of bytes transferred in the last 1 minute
+#     even though it is only reported every 5 minutes as long as the
+#     collected statistics is not aggregated by SUM
+#     there is much discussion on this, but this seems to be the
+#     consensus
+
+
+# expect 1 arg, the max
+# we don't have enough bits for the calc
+# so do the math as Mbits, and tack on 000000 outside of the eval
+# these functions should return the number of bytes in 1 minute
+define(`HI_WM_FRAC',`4/5')      # 80% is the upper limit
+define(`LO_WM_FRAC',`1/5')      # 20% is the lower limit
+
+define(`HIGH_WM', `eval($1 * HI_WM_FRAC / 8 * 60)000000')
+define(`LOW_WM',  `eval($1 * LO_WM_FRAC / 8 * 60)000000')
+
+divert`'dnl
+
+"BandwidthAlarmsPerInstanceType" : {
+  "t2.small"   : { "high" : "HIGH_WM(I_SMALL)", "low" : "LOW_WM(I_SMALL)" },
+  "m3.medium"  : { "high" : "HIGH_WM(I_MEDIUM)", "low" : "LOW_WM(I_MEDIUM)" },
+  "m3.large"   : { "high" : "HIGH_WM(I_LARGE)", "low" : "LOW_WM(I_LARGE)" },
+  "m3.xlarge"  : { "high" : "HIGH_WM(I_XLARGE)", "low" : "LOW_WM(I_XLARGE)" },
+  "m3.2xlarge" : { "high" : "HIGH_WM(I_2XLARGE)", "low" : "LOW_WM(I_2XLARGE)" },
+
+# C4
+  "c4.large"   : { "high" : "HIGH_WM(I_LARGE)", "low" : "LOW_WM(I_LARGE)" },
+  "c4.xlarge"  : { "high" : "HIGH_WM(I_2XLARGE)", "low" : "LOW_WM(I_2XLARGE)" },
+  "c4.2xlarge" : { "high" : "HIGH_WM(I_2XLARGE)", "low" : "LOW_WM(I_2XLARGE)" },
+  "c4.4xlarge" : { "high" : "HIGH_WM(I_4XLARGE)", "low" : "LOW_WM(I_2XLARGE)" },
+  "c4.8xlarge" : { "high" : "HIGH_WM(I_8XLARGE)", "low" : "LOW_WM(I_2XLARGE)" },
+
+# C3
+  "c3.large"   : { "high" : "HIGH_WM(I_LARGE)", "low" : "LOW_WM(I_LARGE)" },
+  "c3.xlarge"  : { "high" : "HIGH_WM(I_XLARGE)", "low" : "LOW_WM(I_2XLARGE)" },
+  "c3.2xlarge" : { "high" : "HIGH_WM(I_2XLARGE)", "low" : "LOW_WM(I_2XLARGE)" },
+  "c3.4xlarge" : { "high" : "HIGH_WM(I_4XLARGE)", "low" : "LOW_WM(I_2XLARGE)" },
+  "c3.8xlarge" : { "high" : "HIGH_WM(I_8XLARGE)", "low" : "LOW_WM(I_2XLARGE)" },
+
+# old generation
+  "m1.small"   : { "high" : "HIGH_WM(I_SMALL)", "low" : "LOW_WM(I_SMALL)" },
+  "m1.medium"  : { "high" : "HIGH_WM(I_MEDIUM)", "low" : "LOW_WM(I_MEDIUM)" },
+  "m1.large"   : { "high" : "HIGH_WM(I_LARGE)", "low" : "LOW_WM(I_LARGE)" },
+  "m1.xlarge"  : { "high" : "HIGH_WM(I_XLARGE)", "low" : "LOW_WM(I_XLARGE)" },
+  "m1.2xlarge" : { "high" : "HIGH_WM(I_2XLARGE)", "low" : "LOW_WM(I_2XLARGE)" }
+
+}
+
+divert(-1)
+
+# remove all the macros we created
+undefine(`BW_LOW',`BW_MOD', `BW_HIGH')
+undefine(`I_MEDIUM', `I_LARGE', `I_XLARGE', `I_2XLARGE')
+undefine(`HIGH_WM', `LOW_WM')
+
+divert`'dnl

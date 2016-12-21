@@ -1,0 +1,78 @@
+# -*- indent-tabs-mode: nil -*-
+#
+#
+
+# Base security groups for the networking layer
+#
+#   -- Do Not Add Application (server) specific security groups here
+#      Create them in their own templates
+VERSION(1.8.1)
+#
+
+INCLUDE(cf4/sncr-cidrs.m4)
+#
+
+{
+  TEMPLATE(`Base Network Security Groups'),
+
+  "Parameters" : {
+
+    paramVpc(VpcId, `VPC ID', `vpc-00000000'),
+    paramCidrBlock(VpcCidr,`VPC CIDR', `0.0.0.0/0'),
+
+    paramDomain(Domain,`app domain', `devops.dev.cloud.synchronoss.net'),
+    paramString(Project, `project',`NOPROJECT'),
+    paramString(Environment, `environment',`NOENVIRONMENT')
+  },
+
+  "Resources" : {
+
+
+    mkVpcSecurityGroup(BastionSG, &VpcId, `bastion access sg'),
+    foreach(`site',
+            ( pabet, njbrw, galway, india1, india2, ivpcUsEast1,
+              pabetExt, njbrwExt, fihelExt, india1Ext, india3Ext,
+              iedub2Ext, galwayExt),
+            `addSecurityGroupRule(BastionSG, site`'SSH,
+                                  in, "tcp", "22", "site`'CIDR"),')
+
+# # internal
+#   addSecurityGroupRule(BastionSG, pabetSSH, in, "tcp", "22", "pabetCIDR"),
+#   addSecurityGroupRule(BastionSG, njbrwSSH, in, "tcp", "22", "njbrwCIDR"),
+#   addSecurityGroupRule(BastionSG, india1SSH, in, "tcp", "22", "india1CIDR"),
+#   addSecurityGroupRule(BastionSG, india2SSH, in, "tcp", "22", "india2CIDR"),
+#   addSecurityGroupRule(BastionSG, galwaySSH, in, "tcp", "22", "galwayCIDR"),
+# # external
+#   addSecurityGroupRule(BastionSG, pabetextSSH, in, "tcp", "22", "pabetEXT"),
+#   addSecurityGroupRule(BastionSG, njbrwextSSH, in, "tcp", "22", "njbrwEXT"),
+#   addSecurityGroupRule(BastionSG, fihelextSSH, in, "tcp", "22", "fihelExtCIDR"),
+#   addSecurityGroupRule(BastionSG, indiaextSSH, in, "tcp", "22", "indiaEXT"),
+#   addSecurityGroupRule(BastionSG, galwayextSSH, in, "tcp", "22", "galwayEXT"),
+#   addSecurityGroupRule(BastionSG, ivpcUse1SSH, in, "tcp", "22", "ivpcUsEast1CIDR"),
+
+  mkVpcSecurityGroup(SshSG, &VpcId, `internal ssh access sg'),
+    addSecurityGroupRule(SshSG, m1SSH, in, "tcp", "22", "10.0.0.0/8"),
+    addSecurityGroupRule(SshSG, m2SSH, in, "tcp", "22", "10.0.0.0/8"),
+
+
+  # The InternalVpcSG is meant to allow unrestricted access within the VPC
+
+  mkVpcSecurityGroup(InternalVpcSG, &VpcId, `Unrestricted Access  within the VPC'),
+    addSecurityGroupRule(InternalVpcSG, AllInternalICMP,
+                                        in, "icmp", "-1", &VpcCidr),
+    addSecurityGroupRule(InternalVpcSG, AllInternalUDP,
+                                        in, "udp", "0-65535", &VpcCidr),
+    addSecurityGroupRule(InternalVpcSG, AllInternalTCP,
+                                        in, "tcp", "0-65535", &VpcCidr),
+
+  mkVpcSecurityGroup(NullSG, &VpcId, `empty sg')
+
+  },
+
+  "Outputs" : {
+    output(InternalVpcSG, `Internal VPC Security Group'),
+    output(BastionSG, `Bastion Access Security Group'),
+    output(SshSG, `SSH Access Security Group'),
+    output(NullSG, `Null Security Group -- !!MUST BE EMPTY!!')
+  }
+}

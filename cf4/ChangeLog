@@ -1,0 +1,10 @@
+2014-11-04  Stephen G. Corbesero  <stephen.corbesero@synchronoss.com>
+
+	* s3-buckets.cf4: correct template description
+
+	* iam-roles.cf4: remove the old json role definition
+
+2014-10-13  Stephen G. Corbesero  <stephen.corbesero@synchronoss.com>
+
+	* network-vpc.cf4: add support to conditionally create and attach
+	a vpn gateway.

@@ -1,0 +1,53 @@
+
+
+################################
+#
+#  Add 1 node to the prod mapr cluster
+#
+#
+#  This incf file is meant to be used in conjunction with the -prod.incf
+#
+#  Note that the enviropment is listed as prod
+#    That is so it can reference all the existing prod stacks and resources
+#
+#  It will typically be called with a command line like
+#    provision_aws -c sncrbda-prod-add1.conf prod
+#
+#
+#
+
+
+[PROD]
+
+# most of these settings must match the -prod conf
+
+AWS_PROFILE=sncr-bda
+PRIVATE_BUCKET=private.prod.sncrbda.sncr
+
+PrivateBucketName=private.prod.sncrbda.sncr
+PublicBucketName=public.prod.sncrbda.sncr
+Domain=sncrbda.prod.cloud.synchronoss.net
+Environment=prod
+KeyPair=sncr-bda-prod
+VpcCidr=10.238.144.0/20
+
+ChefEnv=sncrbda-prod
+
+#########################################################
+#
+# XDF Subnet Resources
+#
+#########################################################
+
+# try to build a single node
+# the cluster must already exist.
+# this mostly depends on all the defaults.
+#
+
+RUN_NAGIOS101_STACK=0
+RUN_MAPR_NODE_STACK=0
+MAPR_NODE_CF_PARAM_AppInstanceType=$MaprNodeInstanceType
+
+
+# create the elbs and their security groups for the consoles
+# see [defaults] for details

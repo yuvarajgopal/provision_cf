@@ -1,0 +1,57 @@
+
+I have just committed, tagged, and pushed version 1.6.2 of the
+cft-core template library for AWS CloudFormation.
+
+This is a library of some core CloudFormation templates that can be
+used as the basis for an AWS project.
+
+With these templates and the provision_aws and cftgen tools (packaged
+separately), it is possible to quickly spin up a new AWS environment
+using the standard model of dmz subnets, private subnets, and public
+subnets across two availability zones.  The templates were designed to
+be modular and reusable.  Some templates are specific, like the chef
+server and chef squid proxy, but even those can be used as reference
+templates to craft other custom template.
+
+Some specific changes in this (minor) release include...
+
+  * fixed an internet gateway name bug bug in the network-vpc template
+  * added a new "ManageMyCredentials" group to the iam-groups template
+
+
+This release of cft-core requires cftgen 2.3.1 (or newer), so you will
+probably need to check that out and install it as well.  It should
+work fine with any recent version of provision_aws (the latest is
+0.3.5)
+
+The git repository is now in the Stash devops project at
+ssh://git@stash.synchronoss.net:7999/devops/cft-core.git
+
+You can clone this repository, and then copy it into a new project.
+This release is at git tag "v1.6.2" -- checkout that tag and use it in
+you projects by copying or "unhooking" it from its git repo.  DO NOT
+modify your checked out copy directly!
+
+To use this new version in an existing project, be sure to upload the
+new helper (bootstrap scripts) and the chef client 11.12 rpm to the s3
+public bucket.  I have tried to make the helper scripts backwards
+compatible.
+
+   IMPORTANT: When using Enterprise Chef in AWS,
+              DO NOT USE A CHEF CLIENT WITH A VERSION GREATER THAN 11.12!
+
+              Newer clients proxy all traffic through the chef proxy
+              in the IVPC and this is not compatible with our
+              architecture.  We are working with Chef for a solution
+              which will allow us to use newer clients.
+
+
+There is some documentation right now in a README file.  There is a
+Confluence page at
+
+http://confluence.synchronoss.net:8085/display/DEVOPS/cft-core+--+CloudFormation+Template+Core+Library
+
+which I have been populating.  This page is in the "AWS Architecture"
+area of the DevOps space at
+
+http://confluence.synchronoss.net:8085/display/DEVOPS/AWS+Architecture?src=contextnavchildmode

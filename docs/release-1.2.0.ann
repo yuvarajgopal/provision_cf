@@ -1,0 +1,18 @@
+
+I have just committed, tagged, and pushed  version 1.0.0 of our cft-core template library for AWS CloudFormation.
+
+Some specific changes include
+       * BootPriority and Purpose parameters and instance tags
+       * gave the nat instance its own security group, in its own template
+       * removed chef-squid-proxy from sample .conf
+       * removed duplicate iam role from iam-roles
+       * some additional/enhanced comments
+
+This release of cft-core requires cftgen 2.1.7 (or newer), so you will probably need to check that out and install it as well.
+
+The git repository is in git.synchronoss.net:/git/devops/aws/libs/cft-core.git
+
+You can clone this repository, and then copy it into a new project.  This release is at git tag v1.0.0
+
+
+There is some documentation right now in a README file.  There is a Confluence page at http://confluence.synchronoss.net:8085/display/DEVOPS/cft-core+--+CloudFormation+Template+Core+Library which I have been populating.  This page is in the “AWS Architecture” area of the DevOps space at http://confluence.synchronoss.net:8085/display/DEVOPS/AWS+Architecture?src=contextnavchildmode

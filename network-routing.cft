@@ -1,0 +1,278 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Manage Routing Tables [1.6.4]",
+  "Parameters": {
+    "VpcId": {
+      "Description": "VPC ID",
+      "Type": "String",
+      "Default": "vpc-00000000",
+      "AllowedPattern": "vpc-[0-9a-f]{8}",
+      "ConstraintDescription": "a valid aws vpc id"
+    },
+    "VpcCidr": {
+      "Description": "VPC CIDR",
+      "Type": "String",
+      "Default": "0.0.0.0/0",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "a valid CIDR specification"
+    },
+    "InternetGW": {
+      "Description": "Internet Gateway ID",
+      "Type": "String",
+      "Default": "igw-00000000",
+      "AllowedPattern": "igw-[0-9a-f]{8}",
+      "ConstraintDescription": "a valid aws vgw id"
+    },
+    "VpcPeerID": {
+      "Description": "Vpc Peer Id",
+      "Type": "String",
+      "Default": "none",
+      "AllowedPattern": "none|pcx-[0-9a-f]{8}",
+      "ConstraintDescription": "a valid aws vpc peer designator"
+    },
+    "NatGwAz1": {
+      "Type": "String",
+      "Default": "none",
+      "Description": "string"
+    },
+    "NatGwAz2": {
+      "Type": "String",
+      "Default": "none",
+      "Description": "string"
+    },
+    "VpcPeerCIDR": {
+      "Description": "Peer CIDR",
+      "Type": "String",
+      "Default": "0.0.0.0/0",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "a valid CIDR specification"
+    },
+    "Project": {
+      "Type": "String",
+      "Default": "NOPROJECT",
+      "Description": "project"
+    },
+    "Environment": {
+      "Type": "String",
+      "Default": "NOENVIRONMENT",
+      "Description": "environment"
+    }
+  },
+  "Conditions": {
+    "HasVpcPeer": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "VpcPeerID"
+            },
+            "none"
+          ]
+        }
+      ]
+    },
+    "HasNatGwAz1": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "NatGwAz1"
+            },
+            "none"
+          ]
+        }
+      ]
+    },
+    "HasNatGwAz2": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "NatGwAz2"
+            },
+            "none"
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "PublicRT": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VpcId"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "PublicRT"
+          },
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "project",
+            "Value": {
+              "Ref": "Project"
+            }
+          }
+        ]
+      }
+    },
+    "routeTointernet": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PublicRT"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "InternetGW"
+        }
+      }
+    },
+    "PrivateAz1RT": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VpcId"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "PrivateAz1RT"
+          },
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "project",
+            "Value": {
+              "Ref": "Project"
+            }
+          }
+        ]
+      }
+    },
+    "PrivateAz2RT": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VpcId"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "PrivateAz2RT"
+          },
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "project",
+            "Value": {
+              "Ref": "Project"
+            }
+          }
+        ]
+      }
+    },
+    "routeTopublicRoute2VpcPeer": {
+      "Type": "AWS::EC2::Route",
+      "Condition": "HasVpcPeer",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PublicRT"
+        },
+        "DestinationCidrBlock": {
+          "Ref": "VpcPeerCIDR"
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "VpcPeerID"
+        }
+      }
+    },
+    "routeToAz1VpcPeer": {
+      "Type": "AWS::EC2::Route",
+      "Condition": "HasVpcPeer",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PrivateAz1RT"
+        },
+        "DestinationCidrBlock": {
+          "Ref": "VpcPeerCIDR"
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "VpcPeerID"
+        }
+      }
+    },
+    "routeToAz2VpcPeer": {
+      "Type": "AWS::EC2::Route",
+      "Condition": "HasVpcPeer",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PrivateAz2RT"
+        },
+        "DestinationCidrBlock": {
+          "Ref": "VpcPeerCIDR"
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "VpcPeerID"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "PublicRT": {
+      "Description": "Route Table for Public Subnets ",
+      "Value": {
+        "Ref": "PublicRT"
+      }
+    },
+    "PrivateAz1RT": {
+      "Description": "Route Table for Private Subnets in AZ1",
+      "Value": {
+        "Ref": "PrivateAz1RT"
+      }
+    },
+    "PrivateAz2RT": {
+      "Description": "Route Table for Private Subnets in AZ2",
+      "Value": {
+        "Ref": "PrivateAz2RT"
+      }
+    }
+  }
+}

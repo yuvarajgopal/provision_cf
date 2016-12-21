@@ -1,0 +1,24 @@
+# -*- indent-tabs-mode: nil -*-
+#
+VERSION(1.8.1)
+#
+{
+   TEMPLATE(`Create EC2 Placement Group'),
+
+  "Parameters" : {
+    paramPlacementStrategy(PlacementStrategy)
+   },
+
+  "Conditions" : {
+  },
+
+  "Resources" : {
+
+    mkPlacementGroup(ClusterPG, &PlacementStrategy)
+
+  },
+
+  "Outputs" : {
+    output(ClusterPG, `AWS PlacementGroup')
+  }
+}

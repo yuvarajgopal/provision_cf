@@ -1,0 +1,110 @@
+
+[DEV]
+
+AWS_PROFILE=sncr-bda
+PRIVATE_BUCKET=private.dev.sncrbda.sncr
+
+PrivateBucketName=private.dev.sncrbda.sncr
+PublicBucketName=public.dev.sncrbda.sncr
+Domain=sncrbda.dev.cloud.synchronoss.net
+Environment=dev
+KeyPair=sncrbda-dev
+VpcCidr=10.238.42.0/23
+
+ChefEnv=sncrbda-dev
+
+RUN_IAM_ROLES_STACK=false
+RUN_IAM_GROUPS_STACK=false
+
+RUN_S3_BUCKETS_STACK=false
+
+RUN_CLOUDWATCH_STACK=false
+
+RUN_ROUTE53_STACK=false
+
+# after creating the DNS zone, or recreating it,
+# remember to add the delagation sets of this zone to the master
+
+RUN_VPC_STACK=false
+
+# peer to US-EAST-1 IVPC
+VpcPeerID=pcx-95c169fc
+VpcPeerCIDR=10.236.100.0/23
+
+RUN_ROUTING_STACK=false
+
+RUN_NETWORK_ACLS_STACK=false
+
+RUN_SUBNETS_STACK=false
+SUBNETS_CF_TEMPLATE=network-subnets-dev.cft
+
+RUN_NETWORK_SGS_STACK=false
+
+RUN_DMZ_BASTION101_STACK=false
+RUN_DMZ_BASTION201_STACK=false
+
+RUN_NATGATEWAY_AZ1_STACK=false
+RUN_NATGATEWAY_AZ2_STACK=false
+
+#########################################################
+#
+# XDF Subnet Resources
+#
+#########################################################
+
+RUN_XDFNODE_SG_STACK=false
+
+# the following must be coordinated in the chef environment file
+# cldb must point to a node
+# zk must point to some number of nodes
+# the web server must be on a node
+# the order is important
+
+RUN_MAPR_NODE_STACK=0
+MAPR_NODE_CF_PARAM_AppInstanceType=$MaprNodeInstanceType
+
+RUN_RTFE_NODE_STACK=0
+
+# vvvvvv ---- don't use these ---- vvvvvv
+#
+# create a spark master, 0 or 1
+RUN_MAPR_SPARKMASTER_NODE_STACK=0
+
+# create spark workers
+RUN_MAPR_SPARKWORKER_NODE_STACK=0
+
+# create some drill nodes
+RUN_MAPR_DRILL_NODE_STACK=0
+#
+# ^^^^^^ ---- don't use these ---- ^^^^^^
+
+
+# create the elbs and their security groups for the consoles
+# see [defaults] for details
+
+RUN_MAPR_CONSOLE_SG_STACK=false
+RUN_SPARK_CONSOLE_SG_STACK=false
+RUN_DRILL_CONSOLE_SG_STACK=false
+RUN_OOZIE_CONSOLE_SG_STACK=false
+
+RUN_MAPR_CONSOLE_ELB_STACK=false
+MAPR_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDADEV-MAPR-NODE-101::Server
+
+RUN_SPARK_CONSOLE_ELB_STACK=false
+SPARK_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDADEV-MAPR-NODE-104::Server
+
+RUN_DRILL_CONSOLE_ELB_STACK=false
+DRILL_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDADEV-MAPR-NODE-102::Server
+
+RUN_OOZIE_CONSOLE_ELB_STACK=false
+OOZIE_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDADEV-MAPR-NODE-101::Server
+
+
+#########################################################
+#
+# MGMT Subnet Resources
+#
+#########################################################
+
+RUN_DEPLOY101_STACK=false
+RUN_RSYSLOG101_STACK=false

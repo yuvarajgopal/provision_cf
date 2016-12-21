@@ -1,0 +1,112 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Create DNS Zone in Route53 [1.6.3]",
+  "Parameters": {
+    "Domain": {
+      "Description": "Domain",
+      "Type": "String",
+      "AllowedPattern": "[-A-Za-z0-9.]+\\.[A-Za-z]{2,4}",
+      "ConstraintDescription": "a domain"
+    }
+  },
+  "Resources": {
+    "ZoneR53": {
+      "Type": "AWS::Route53::HostedZone",
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "Domain"
+              },
+              "."
+            ]
+          ]
+        },
+        "HostedZoneConfig": {
+          "Comment": "Created by CF"
+        }
+      }
+    },
+    "localhost": {
+      "Type": "AWS::Route53::RecordSet",
+      "DependsOn": "ZoneR53",
+      "Properties": {
+        "Comment": "",
+        "HostedZoneName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "Domain"
+              },
+              "."
+            ]
+          ]
+        },
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "localhost",
+              ".",
+              {
+                "Ref": "Domain"
+              },
+              "."
+            ]
+          ]
+        },
+        "Type": "A",
+        "TTL": "300",
+        "ResourceRecords": [
+          "127.0.0.1"
+        ]
+      }
+    },
+    "InstanceDataMetaHost": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "Comment": "",
+        "HostedZoneName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "Domain"
+              },
+              "."
+            ]
+          ]
+        },
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "instance-data",
+              ".",
+              {
+                "Ref": "Domain"
+              },
+              "."
+            ]
+          ]
+        },
+        "Type": "A",
+        "TTL": "300",
+        "ResourceRecords": [
+          "169.254.169.254"
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "ZoneR53": {
+      "Description": "Route 53 Zone ID",
+      "Value": {
+        "Ref": "ZoneR53"
+      }
+    }
+  }
+}

@@ -1,0 +1,72 @@
+# -*- indent-tabs-mode: nil -*-
+#
+# nat gateways
+#    -- nat gateways were relased in AWS ~ 2016-12, and added to cf 2016-03
+#
+VERSION(1.8.1)
+#
+
+{
+ TEMPLATE(`NAT Gateways'),
+
+  "Parameters" : {
+
+    paramSubnet(Subnet,`'),
+    paramRouteTable(PrivateRTB, `private route table for this nat'),
+
+    paramInteger(MaxProvisionTime,`Provision wait time (s)', "1500", "0", "3600"),
+    paramEipAllocId(NatGwEipAlloc),
+
+    paramString(OpsAlertsTopic, `'),
+
+    paramBootPriority(0),
+    paramPurpose(infrastructure),
+
+    paramString(Environment, `environment',`NOENVIRONMENT'),
+    paramString(Project, `project',`NOPROJECT')
+
+  },
+
+  "Conditions" : {
+
+  # do we need to allocate an EIP ?
+    "NeedsEIP" : cfnEquals(&NatGwEipAlloc, "none"),
+    "HasEIP" : cfnNotEquals(&NatGwEipAlloc, "none"),
+
+  # should we wait for the server to be report success?
+    "MustWait" : cfnNotEquals(&MaxProvisionTime, "0")
+
+  },
+
+  "Resources" : {
+
+    mkWaitConditionHandle(WaitHandle),
+
+
+    CONDBLOCK(NeedsEIP)
+
+    mkVpcElasticIP(NatGwEIP),
+    mkNatGateway(NatGw, &Subnet, `cfnGetAttr("NatGwEIP", "AllocationId")'),
+    mkNatGwRoute(NatGwRouteEntry, &PrivateRTB, "0.0.0.0/0", &NatGw),
+
+    CONDBLOCK(HasEIP)
+
+    mkNatGateway(NatGwExistingEip, &Subnet, &NatGwEipAlloc),
+    mkNatGwRoute(NatGwRouteAltEntry, &PrivateRTB, "0.0.0.0/0", &NatGwExistingEip)
+
+    CONDBLOCK()
+
+  },
+
+  "Outputs" : {
+    "NATDeviceId" : {
+      "Condition" : "NeedsEIP",
+      "Value" : cfnRef(NatGw),
+      "Description" : "NAT GW  Id"
+    }
+  }
+}
+
+# ChangeLog
+#
+# 2016-03-02 SGC Initial Version

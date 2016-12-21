@@ -1,0 +1,51 @@
+
+I have just committed, tagged, and pushed version 1.3.0 of the
+cft-core template library for AWS CloudFormation.
+
+Some specific changes include
+
+   * Enhanced EBS Volume Support for the generic server template
+     [see the README file]
+
+   * The OPS_ALERTS_TOPIC variable is now exposed from the userdata
+     scripts so it can be used to publish alert messages.  For
+     example, the signal-wait-condition.sh bootstrap helper now
+     publishes a message when server provisioning is complete.
+
+   * Changes and Enhancements to some bootstrap scripts to support the
+     new features.
+
+   * Chef client updated to 11.16.4 (via
+     bootstrap/sncr-aws-versions.sh)
+
+   * Some Fixes, including
+     - BootPriority and Purpose tags are updated now
+
+
+This release of cft-core requires cftgen 2.2.1 (or newer), so you will
+probably need to check that out and install it as well.  It should
+work fine with any recent version of provision_aws (the latest is
+0.3.1)
+
+The git repository is in git.synchronoss.net:/git/devops/aws/libs/cft-core.git
+
+You can clone this repository, and then copy it into a new project.
+This release is at git tag "v1.3.0" -- checkout that tag and use it in
+you projects by copying or "unhooking" it from its git repo.  DO NOT
+modify your checked out copy directly.
+
+To use this new version in an existing project, be sure to upload the
+new helper (bootstrap scripts) and the new chef client rpm to the s3
+public bucket.  I have tried to make the helper scripts backwards
+compatible.
+
+
+There is some documentation right now in a README file.  There is a
+Confluence page at
+
+http://confluence.synchronoss.net:8085/display/DEVOPS/cft-core+--+CloudFormation+Template+Core+Library
+
+which I have been populating.  This page is in the “AWS Architecture”
+area of the DevOps space at
+
+http://confluence.synchronoss.net:8085/display/DEVOPS/AWS+Architecture?src=contextnavchildmode

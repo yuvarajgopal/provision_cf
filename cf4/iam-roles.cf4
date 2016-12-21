@@ -1,0 +1,49 @@
+# -*- indent-tabs-mode: nil -*-
+#
+# Create IAM roles for server access
+#
+VERSION(1.8.1)
+#
+{
+  TEMPLATE(`Create IAM Roles'),
+
+  "Parameters" : {
+    paramDomain(Domain,`app domain', `devops.dev.cloud.synchronoss.net'),
+    paramString(Project, `project',`NOPROJECT'),
+    paramString(Environment, `environment',`NOENVIRONMENT')
+  },
+
+  "Resources" : {
+
+    mkIamRole(AppRole, "/", "*",
+      `"cloudformation:DescribeStackResources",
+       "ec2:Describe*",
+       "s3:List*","s3:Get*",
+       "sns:Get*","sns:List*","sns:Publish","sns:Subscribe"'),
+
+    mkIamInstanceProfile(AppRoleProfile, "/", &AppRole),
+    mkIamInstanceProfile(AppInstanceProfile, "/", &AppRole),
+
+    mkIamRole(BastionRole, "/", "*",
+      `"ec2:Describe*",
+       "s3:List*","s3:Get*",
+       "sns:Get*","sns:List*","sns:Publish","sns:Subscribe"'),
+    mkIamInstanceProfile(BastionRoleProfile, "/", &BastionRole),
+
+    mkIamRole(NatRole, "/", "*",
+      `"ec2:Describe*","ec2:StartInstances","ec2:StopInstances",
+       "s3:List*","s3:Get*",
+       "sns:Get*","sns:List*","sns:Publish","sns:Subscribe"'),
+    mkIamInstanceProfile(NatRoleProfile, "/", &NatRole)
+
+  },
+
+  "Outputs" : {
+    output(AppRole,`Role for Application Servers'),
+    output(AppInstanceProfile, `Profile for the App Role'),
+    output(BastionRole,`Role for Bastion Servers'),
+    output(BastionRoleProfile, `Instance Profile for the Bastion Role'),
+    output(NatRole,`Role for Nat Servers'),
+    output(NatRoleProfile, `Instance Profile for the Nat Role')
+    }
+}

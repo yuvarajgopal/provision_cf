@@ -1,0 +1,326 @@
+# -*- indent-tabs-mode: nil -*-
+#
+# create a generic server
+#          a High CPU Alarm
+#          a Route53 record for its private address
+#
+VERSION(1.8.1)
+#
+# conditionally creates/attaches an EIP and a Route53 record for the EIP
+# conditionally creates CNAMEs for the instance
+#
+ifdef(`NVOLUMES', `', `define(`NVOLUMES', `12')')dnl
+ifdef(`NEPHEMS',  `', `define(`NEPHEMS', `4')')dnl
+#
+#
+
+{
+  TEMPLATE(`Create a Generic Server'),
+
+  "Parameters" : {
+
+    paramSecurityGroup(InternalSG),
+    paramSecurityGroup(ExternalSG),
+    paramSecurityGroup(AppSG),
+
+    paramSubnet(Subnet),
+    paramString(AppInstanceProfile),
+
+    paramString(ChefRoles, `comma separated list of Chef roles'),
+    paramString(ChefEnv),
+    paramString(ChefServerURL),
+    paramString(ChefOrg),
+    paramString(ChefProxyURL),
+
+    paramAmi(InstanceAMI),
+    paramInstanceType(AppInstanceType, `EC2 Instance Type', "m1.medium"),
+
+    paramDiskSize(RootDiskSize, `', `12'),
+    paramString(RootDiskDevice, `', `/dev/sda1'),
+    paramDiskSize(OptDiskSize, `'),
+    paramString(OptDiskDevice, `', `/dev/xvdf'),
+
+    paramPlacementGroup(ClusterPG),
+    paramIpAddress(PrivateIP),
+    paramTenancy(Tenancy),
+
+    "EphemeralDevList": {
+      "Type": "CommaDelimitedList",
+      "Description": "device names for ephemeral mounts",
+      "Default": "define(`_sep', `')forloop(`_index', 0, decr(NEPHEMS),
+                   `_sep`'/dev/xvd`'format(`%c',eval(98+_index))`'define(`_sep',`,')')"
+    },
+
+    paramInteger(MaxProvisionTime,`Provision wait time (s)', "1500", "0", "3600"),
+
+    forloop(`x', 1, NVOLUMES,
+                 `paramAttachedVolume(Volume`'x),')
+
+    paramString(NodeName, `', `test'),
+    paramString(NodeIndex, `', `01'),
+
+    paramBoolean(AssignEIP, `', `False'),
+    paramCname(PrivateCNAME),
+    paramCname(PublicCNAME),
+
+    paramString(OpsAlertsTopic),
+    paramKey(KeyPair, `', `no-key'),
+    paramS3Bucket(PublicBucketName),
+    paramS3Bucket(PrivateBucketName),
+
+    paramBootPriority(2),
+    paramPurpose(component),
+    paramString(ExtraHelper, `Additional Bootstrap Helper', `none'),
+
+    paramDomain(Domain, `app domain', `chubsre.dev.cloud.synchronoss.net'),
+    paramString(Environment, `environment',`NOENVIRONMENT'),
+    paramString(Project, `project',`NOPROJECT')
+  },
+
+  "Conditions" : {
+
+    # opt volume required for this instance?
+    "NeedsOptVolume" : cfnNotEquals(`cfnRef(OptDiskSize)', "0"),
+
+    # eip required for this instance?
+    "NeedsEIP" : cfnEquals(`cfnRef(AssignEIP)', "True"),
+
+    # CNAMEs required for this instance?
+    "NeedsPrivateCNAME" : cfnNotEquals(&PrivateCNAME, "none"),
+    "NeedsPublicCNAME" : cfnNotEquals(&PublicCNAME, "none"),
+
+    # Will this instance go into a placement group?
+    "UsePlacementGroup": cfnNotEquals(&ClusterPG, "none"),
+
+    # Was a (dedicated) tenancy specified
+    "UseTenancy": cfnNotEquals(&Tenancy, "none"),
+
+    # Was a private IP specified?
+    "UsePrivateIp" : cfnNotEquals(&PrivateIP, "none"),
+
+    # MAKE_EXTRA_VOLUME_CONDITIONS(v)
+
+    define(`MAKE_EXTRA_VOLUME_CONDITIONS',`
+      "Needs$1" :
+        cfnNotEquals(`cfnSelect(0, &$1)', "0"),
+
+      "$1`'UsesIops" :
+        cfnAnd(`cfnCondition("Needs$1")',
+               `cfnEquals(`cfnSelect(1, &$1)', "io1")'),
+
+      "$1`'IsStandard" :
+        cfnAnd(`cfnCondition("Needs$1")',
+               `cfnNot(`cfnCondition("$1`'UsesIops")')')
+    ')
+
+    forloop(`x', 1, NVOLUMES,
+                 `MAKE_EXTRA_VOLUME_CONDITIONS(Volume`'x),')
+
+    undefine(`MAKE_EXTRA_VOLUME_CONDITIONS')
+
+    # should we wait for the server to be report success?
+
+    "MustWait" : cfnNotEquals(&MaxProvisionTime, "0")
+  },
+
+  "Resources" : {
+
+    "Server" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : cfnRef(AppInstanceType),
+        "IamInstanceProfile" : cfnRef(AppInstanceProfile),
+        "KeyName" : cfnRef(KeyPair),
+        "SubnetId" : cfnRef(Subnet),
+        "SecurityGroupIds" : json_listify(cfnRef(InternalSG),cfnRef(AppSG),cfnRef(ExternalSG)),
+        "SourceDestCheck" : "True",
+        "PlacementGroupName": cfnIf(UsePlacementGroup, &ClusterPG),
+        "Tenancy": cfnIf(UseTenancy, &ClusterPG),
+        "PrivateIpAddress": cfnIf(UsePrivateIp, &PrivateIP),
+        "ImageId" : cfnRef(InstanceAMI),
+        "BlockDeviceMappings" : [
+          forloop(`x', 0, decr(NEPHEMS),
+            `EPHDEVICE(`cfnSelect(x, &EphemeralDevList)', x),')
+          ROOTSSD(&RootDiskSize, &RootDiskDevice)
+        ],
+        "UserData" : cfnMakeUserData(`./cf4/userdata-chef-client.sh.jl'),
+        "Tags" : cfnInstanceTagList(`cfnPaste(&NodeName, &NodeIndex)')
+      }
+    },
+
+    # if the OptDiskSize was non-zero, we need to create
+    # an ebs volume for /opt and attach it
+
+    "OptVolume" : {
+      "Type" : "AWS::EC2::Volume",
+      "Condition" : "NeedsOptVolume",
+      "Properties" : {
+        "Size" : cfnRef(OptDiskSize),
+        "AvailabilityZone" : cfnGetAttr("Server", "AvailabilityZone"),
+        "Tags": cfnTagList(`cfnPaste(&NodeName, &NodeIndex,":/opt")')
+      }
+    },
+
+    CONDBLOCK(NeedsOptVolume)
+      mountVolume(OptMount, OptVolume, Server, &OptDiskDevice),
+    CONDBLOCK()
+
+    # MAKE_EXTRA_VOLUME(v)
+    #
+    # Conditionally makes two versions of a volume,
+    #   one for iops and one for non-iops
+    # Conditionally does the mount if the volume is needed
+    #
+
+    define(`MAKE_EXTRA_VOLUME',`
+      "$1`'Standard" : {
+        "Type" : "AWS::EC2::Volume",
+        "Condition" : "$1`'IsStandard",
+        "Properties" : {
+          "VolumeType" : cfnSelect(1, &$1),
+          "Size" : cfnSelect(0, &$1),
+          "AvailabilityZone" : cfnGetAttr("Server", "AvailabilityZone"),
+          "Tags": cfnTagList(`cfnPaste(&NodeName, &NodeIndex,
+                              ":",
+                              cfnSelect(3, &$1))')
+        }
+      },
+
+      "$1`'Iops" : {
+        "Type" : "AWS::EC2::Volume",
+        "Condition" : "$1`'UsesIops",
+        "Properties" : {
+          "VolumeType" : cfnSelect(1, &$1),
+          "Size" : cfnSelect(0, &$1),
+          "Iops" : cfnSelect(4, &$1),
+          "AvailabilityZone" : cfnGetAttr("Server", "AvailabilityZone"),
+          "Tags" : cfnTagList(`cfnPaste(&NodeName, &NodeIndex,
+                              ":",
+                              cfnSelect(3, &$1))')
+        }
+      },
+
+      # CONDBLOCK(Needs$1)
+      #   mountVolume($1`'Mount, $1`'Ebs, Server, `cfnSelect(2, &$1)')
+      # CONDBLOCK()
+
+      CONDBLOCK($1`'UsesIops)
+        mountVolume($1`'IOPSMount, $1`'Iops, Server, `cfnSelect(2, &$1)'),
+      CONDBLOCK()
+
+      CONDBLOCK($1`'IsStandard)
+        mountVolume($1`'StandardMount, $1`'Standard, Server, `cfnSelect(2, &$1)')
+      CONDBLOCK()
+    ')
+
+    forloop(`x', 1, NVOLUMES,
+                 `MAKE_EXTRA_VOLUME(Volume`'x),')
+
+    undefine(`MAKE_EXTRA_VOLUME')
+
+    # create the networking glue for this instance
+
+    CONDBLOCK(NeedsEIP)
+      mkVpcElasticIP(AppEIP, Server),
+      r53HostAddr(AppEIPRecord,
+                  `cfnPaste(&NodeName, &NodeIndex, "-eip")',
+                  &Domain,
+                  &AppEIP),
+    CONDBLOCK()
+
+    r53HostAddr(AppPrivateAddrRecord, `cfnPaste(&NodeName, &NodeIndex)',
+                &Domain,
+                `cfnGetAttr("Server", "PrivateIp")'),
+
+    CONDBLOCK(NeedsPrivateCNAME)
+      r53Cname(AppPrivateCNAME,
+               &PrivateCNAME,
+               &Domain,
+               `cfnPaste(&NodeName, &NodeIndex, ".", &Domain)'),
+    CONDBLOCK()
+
+    CONDBLOCK(NeedsPublicCNAME)
+      r53Cname(AppPublicCNAME,
+               &PublicCNAME,
+               &Domain,
+               `cfnPaste(&NodeName, &NodeIndex, "-eip.", &Domain)'),
+    CONDBLOCK()
+
+    mkWaitConditionHandle(WaitHandle),
+
+    CONDBLOCK(MustWait)
+      mkWaitCondition(WaitCondition, "Server", &WaitHandle, &MaxProvisionTime),
+    CONDBLOCK()
+
+    cwHighCpuAlarm(AppCPUAlarmHigh, 80, 300, 2, &OpsAlertsTopic, `cfnRef(Server)')
+  },
+
+  #
+  # OUTPUT_VOLUME_INFO(Volume) and OUTPUT_VOLUME_INFO_COND(Volume)
+  #
+
+  define(`_OVI_DATA', `
+    "Value" : cfnPaste(`cfnSelect(0, &$1)',
+                       "GB as ",
+                        `cfnSelect(2, &$1)',
+                        " mounted on ",
+                        `cfnSelect(3, &$1)'),
+    "Description" : "$1"
+  ')
+
+  define(`OUTPUT_VOLUME_INFO_COND', `
+    "$1" : {
+      "Condition" : "Needs$1",
+      _OVI_DATA(`$1')
+    }
+  ')
+
+  define(`OUTPUT_VOLUME_INFO', `
+    "$1" : {
+      _OVI_DATA(`$1')
+    }
+  ')
+
+  "Outputs" : {
+    "ServerWaitResult" : {
+      "Condition" : "MustWait",
+      "Value" : { "Fn::GetAtt" : [ "WaitCondition", "Data" ] },
+      "Description" : "Reported Wait Data"
+    },
+    "Server" : {
+      "Value" : cfnPaste(&NodeName, &NodeIndex),
+      "Description": "Name"
+    },
+    "RootVolume": {
+      "Value" : cfnPaste(&RootDiskSize,
+                         "GB as ",
+                         &RootDiskDevice,
+                         " mounted on /"),
+      "Description" : "Root Volume"
+    },
+    "OptVolume" : {
+      "Condition" : "NeedsOptVolume",
+      "Value" : cfnPaste(&OptDiskSize,
+                         "GB as OPTDEV mounted on /opt"),
+      "Description" : "Opt Volume"
+    },
+    forloop(`x', `1', NVOLUMES,
+                 `OUTPUT_VOLUME_INFO_COND(Volume`'x)ifelse(x,NVOLUMES,`',`,')')
+
+  }
+
+  undefine(`OUTPUT_VOLUME_INFO')
+  undefine(`OUTPUT_VOLUME_INFO_COND')
+  undefine(`_OVI_DATA')
+  undefine(`NVOLUMES')
+}
+
+# ChangeLog
+#
+# 2015-06-25       SGC added volumes 10..12
+# 2014-12-03 0.2.1 SGC added conditional volume support
+#
+# 2014-09-23 0.1.5 SGC added conditional support for EIP and WaitCondition
+#                  requires a cftgen with CONDBLOCK() support
+#
+# 2014-xx-xx 0.1.0 SGC original version

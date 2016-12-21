@@ -1,0 +1,168 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "NAT Gateways [1.8.1]",
+  "Parameters": {
+    "Subnet": {
+      "Description": "Subnet Id",
+      "Type": "String",
+      "Default": "subnet-00000000",
+      "AllowedPattern": "subnet-[0-9a-f]{8}",
+      "ConstraintDescription": "a valid aws subnet id"
+    },
+    "PrivateRTB": {
+      "Description": "private route table for this nat",
+      "Type": "String",
+      "Default": "rtb-00000000",
+      "AllowedPattern": "rtb-[0-9a-f]{8}",
+      "ConstraintDescription": "a valid aws route table id"
+    },
+    "MaxProvisionTime": {
+      "Default": "1500",
+      "Description": "Provision wait time (s)",
+      "Type": "Number",
+      "MinValue": "0",
+      "MaxValue": "3600"
+    },
+    "NatGwEipAlloc": {
+      "Description": "EIP Allocation ID",
+      "Type": "String",
+      "Default": "none",
+      "AllowedPattern": "none|eipalloc-[0-9a-f]{8}",
+      "ConstraintDescription": "a valid eip allocation id"
+    },
+    "OpsAlertsTopic": {
+      "Type": "String",
+      "Description": "string"
+    },
+    "BootPriority": {
+      "Description": "Boot Priority Level",
+      "Type": "Number",
+      "Default": "0",
+      "MinValue": "0"
+    },
+    "Purpose": {
+      "Description": "Instance Purpose",
+      "Type": "String",
+      "Default": "infrastructure",
+      "AllowedPattern": "[A-Za-z0-9_-]+"
+    },
+    "Environment": {
+      "Type": "String",
+      "Default": "NOENVIRONMENT",
+      "Description": "environment"
+    },
+    "Project": {
+      "Type": "String",
+      "Default": "NOPROJECT",
+      "Description": "project"
+    }
+  },
+  "Conditions": {
+    "NeedsEIP": {
+      "Fn::Equals": [
+        {
+          "Ref": "NatGwEipAlloc"
+        },
+        "none"
+      ]
+    },
+    "HasEIP": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "NatGwEipAlloc"
+            },
+            "none"
+          ]
+        }
+      ]
+    },
+    "MustWait": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "MaxProvisionTime"
+            },
+            "0"
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "WaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle"
+    },
+    "NatGwEIP": {
+      "Type": "AWS::EC2::EIP",
+      "Condition": "NeedsEIP",
+      "Properties": {
+        "Domain": "vpc"
+      }
+    },
+    "NatGw": {
+      "Type": "AWS::EC2::NatGateway",
+      "Condition": "NeedsEIP",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "Subnet"
+        },
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "NatGwEIP",
+            "AllocationId"
+          ]
+        }
+      }
+    },
+    "routeToNatGwRouteEntry": {
+      "Type": "AWS::EC2::Route",
+      "Condition": "NeedsEIP",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PrivateRTB"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "NatGw"
+        }
+      }
+    },
+    "NatGwExistingEip": {
+      "Type": "AWS::EC2::NatGateway",
+      "Condition": "HasEIP",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "Subnet"
+        },
+        "AllocationId": {
+          "Ref": "NatGwEipAlloc"
+        }
+      }
+    },
+    "routeToNatGwRouteAltEntry": {
+      "Type": "AWS::EC2::Route",
+      "Condition": "HasEIP",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PrivateRTB"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "NatGwExistingEip"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "NATDeviceId": {
+      "Condition": "NeedsEIP",
+      "Value": {
+        "Ref": "NatGw"
+      },
+      "Description": "NAT GW  Id"
+    }
+  }
+}

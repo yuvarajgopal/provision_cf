@@ -1,0 +1,50 @@
+# -*- indent-tabs-mode: nil -*-
+#
+VERSION(1.6.3)
+#
+{
+    TEMPLATE(`Create DNS Zone in Route53'),
+
+   "Parameters" : {
+     paramDomain(Domain, `Domain')
+},
+
+
+"Resources" : {
+    "ZoneR53":  {
+        "Type" : "AWS::Route53::HostedZone",
+        "Properties" : {
+	  "Name" : cfnPaste(&Domain, "."),
+	  "HostedZoneConfig" : {
+		"Comment": "Created by CF"
+            }
+        }
+    },
+
+    "localhost": {
+      "Type": "AWS::Route53::RecordSet",
+      "DependsOn": "ZoneR53",
+      "Properties": {
+        "Comment": "",
+        "HostedZoneName": cfnPaste(&Domain, "."),
+        "Name": cfnPaste("localhost", ".", &Domain, "."),
+        "Type": "A",
+        "TTL": "300",
+        "ResourceRecords": [
+          "127.0.0.1"
+        ]
+      }
+    },
+
+    r53HostAddr(InstanceDataMetaHost, "instance-data",
+                                      &Domain, "169.254.169.254")
+
+    },
+
+    "Outputs" : {
+      "ZoneR53": {
+        "Description": "Route 53 Zone ID",
+        "Value": cfnRef(ZoneR53)
+      }
+    }
+  }

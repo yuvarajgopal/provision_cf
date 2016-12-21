@@ -1,0 +1,76 @@
+# -*- indent-tabs-mode: nil -*-
+#
+# Assign Policies to the S3 Buckets
+#
+VERSION(1.8.1)
+#
+# DO NOT USE -- THIS SIS TILL A WORK IN PROGRESS
+#
+
+{
+  TEMPLATE(`Set Up CloudTrail Logging'),
+
+  "Parameters" : {
+    paramS3Bucket(LoggingBucketName, `'),
+    paramString(OpsAlertsTopic),
+    paramString(Environment, `environment',`NOENVIRONMENT'),
+    paramString(Project, `project',`NOPROJECT')
+  },
+
+  "Resources": {
+
+    DELETIONPOLICY(Retain)
+
+    S3Bucket(LoggingBucket, &LoggingBucketName)
+
+    DELETIONPOLICY()
+
+    # "BucketPolicy" : {
+    #   "Version": "2012-10-17",
+    #     "Statement": [
+    #       {
+    #         "Sid": "AWSCloudTrailAclCheck",
+    #         "Effect": "Allow",
+    #         "Principal": {
+    #           "Service": "cloudtrail.amazonaws.com"
+    #         },
+    #         "Action": "s3:GetBucketAcl",
+    #         "Resource": cfnPaste("arn:aws:s3:::", &LoggingBucket)
+    #       },
+    #       {
+    #         "Sid": "AWSCloudTrailWrite",
+    #         "Effect": "Allow",
+    #         "Principal": {
+    #           "Service": "cloudtrail.amazonaws.com"
+    #         },
+    #         "Action": "s3:PutObject",
+    #         "Resource": cfnPaste("arn:aws:s3:::",
+    #                              &LoggingBucket,
+    #                              "/AWSLogs/",
+    #                              cfnRef(AWS::AccountId),
+    #                              "/*"),
+    #         "Condition": {
+    #           "StringEquals": {
+    #             "s3:x-amz-acl": "bucket-owner-full-control"
+    #           }
+    #         }
+    #       }
+    #     ]
+    #   },
+
+
+    # "myTrail" : {
+    #   "DependsOn" : ["BucketPolicy"],
+    #   "Type" : "AWS::CloudTrail::Trail",
+    #   "Properties" : {
+    #     "S3BucketName" : cfnRef(LoggingBucket),
+    #     "SnsTopicName" : cfnRef(OpsAlertsTopic),
+    #     "IsLogging" : true
+    #   }
+    # }
+
+  },
+
+  "Outputs": {
+  }
+}

@@ -1,0 +1,115 @@
+
+[DEV]
+
+################################
+#
+#  Alexey's real-time cluster
+#
+#
+#  This incf file is meant to be used in conjunction with the -dev.incf
+#
+#  Note that the enviropment is listed as dev
+#    That is so it can reference all the existing dev stacks and resources
+#
+#  It will typically be called with a command line like
+#    provision_aws -c sncrbda-dev-rt.conf dev
+#
+#
+#  But ...
+#    * The resources that it creates need to be launched with different
+#      stack names, specifically SNRCBDADEV-RT-...
+#
+#    * the nodes will be in the sncrbda-dev-rt chef environment
+#
+
+
+############################################################
+## most of this file must not be changed.
+## the settings are form the generic dev environment
+############################################################
+
+AWS_PROFILE=sncr-bda
+PRIVATE_BUCKET=private.dev.sncrbda.sncr
+
+PrivateBucketName=private.dev.sncrbda.sncr
+PublicBucketName=public.dev.sncrbda.sncr
+Domain=sncrbda.dev.cloud.synchronoss.net
+Environment=dev
+KeyPair=sncrbda-dev
+VpcCidr=10.238.42.0/23
+
+ChefEnv=sncrbda-dev-rt
+
+# peer to US-EAST-1 IVPC
+VpcPeerID=pcx-95c169fc
+VpcPeerCIDR=10.236.100.0/23
+
+#########################################################
+#
+# XDF Subnet Resources
+#
+#########################################################
+
+MaprNodeInstanceType=r3.xlarge
+RtfeNodeInstanceType=m3.xlarge
+
+RUN_XDFNODE_SG_STACK=false
+
+# the following must be coordinated in the chef environment file
+# cldb must point to a node
+# zk must point to some number of nodes
+# the web server must be on a node
+# the order is important
+
+RUN_MAPR_NODE_STACK=0
+MAPR_NODE_STACK_NAME=${STACK_PREFIX}-RT-MAPR-NODE
+MAPR_NODE_CF_PARAM_AppInstanceType=$MaprNodeInstanceType
+MAPR_NODE_CF_PARAM_NodeName=rtmapr
+
+RUN_RTFE_NODE_STACK=0
+RTFE_NODE_STACK_NAME=${STACK_PREFIX}-RT-RTFE-NODE
+RTFE_NODE_CF_PARAM_NodeName=rtfe
+
+# create the elbs and their security groups for the consoles
+# see [defaults] for details
+
+RUN_MAPR_CONSOLE_SG_STACK=false
+RUN_SPARK_CONSOLE_SG_STACK=false
+RUN_DRILL_CONSOLE_SG_STACK=false
+RUN_OOZIE_CONSOLE_SG_STACK=false
+
+RUN_MAPR_CONSOLE_ELB_STACK=false
+    MAPR_CONSOLE_ELB_STACK_NAME=${STACK_PREFIX}-RT-MAPR-CONSOLE
+    MAPR_CONSOLE_ELB_CF_PARAM_ElbCNAME=rtmapr
+    MAPR_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDADEV-RT-MAPR-NODE-101::Server
+
+RUN_SPARK_CONSOLE_ELB_STACK=false
+    SPARK_CONSOLE_ELB_STACK_NAME=${STACK_PREFIX}-RT-SPARK-CONSOLE
+    SPARK_CONSOLE_ELB_CF_PARAM_ElbCNAME=rtspark
+    SPARK_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDADEV-RT-MAPR-NODE-101::Server
+
+#########################################################
+#
+# AP (Analytics Portal)  Subnet Resources
+#
+#########################################################
+
+EsapNodeInstanceType=m3.xlarge
+
+RUN_ESAP_NODE_STACK=0
+ESAP_NODE_STACK_NAME=${STACK_PREFIX}-RT-ESAP-NODE
+ESAP_NODE_CF_PARAM_NodeName=rtesap
+ESAP_NODE_CF_PARAM_AppInstanceType=$EsapNodeInstanceType
+ESAP_NODE_CF_PARAM_ChefRoles=base,rsyslog-client,esap,swap
+
+RUN_ESAP_CONSOLE_SG_STACK=false
+ESAP_CONSOLE_SG_STACK_NAME=${STACK_PREFIX}-RT-ESAP-CONSOLE-SG
+ESAP_CONSOLE_SG_CF_PARAM_Port=$EsapConsolePort
+
+RUN_ESAP_CONSOLE_ELB_STACK=true
+ESAP_CONSOLE_ELB_STACK_NAME=${STACK_PREFIX}-RT-ESAP-CONSOLE-ELB
+ESAP_CONSOLE_ELB_CF_PARAM_InPort=$EsapConsolePort
+ESAP_CONSOLE_ELB_CF_PARAM_OutPort=$EsapConsolePort
+ESAP_CONSOLE_ELB_CF_PARAM_SecurityGroups=${STACK_PREFIX}-RT-ESAP-CONSOLE-SG::EsapConsoleSG
+ESAP_CONSOLE_ELB_CF_PARAM_ElbCNAME=rtesap
+ESAP_CONSOLE_ELB_CF_PARAM_Instances=${STACK_PREFIX}-RT-ESAP-NODE-101::Server

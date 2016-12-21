@@ -1,0 +1,41 @@
+# -*- indent-tabs-mode: nil -*-
+#
+VERSION(1.4.0)
+#
+INCLUDE(cf4/sncr-cidrs.m4)
+#
+
+{
+  TEMPLATE(`SG for a Test Server'),
+
+  "Parameters" : {
+
+    paramVpc(VpcId, `VPC ID', `vpc-00000000'),
+    paramCidrBlock(VpcCidr, `'),
+
+    paramDomain(Domain, `app domain', `devops.dev.cloud.synchronoss.net'),
+    paramString(Project, `project',`NOPROJECT'),
+    paramString(Environment, `environment',`NOENVIRONMENT')
+
+  },
+
+  "Resources" : {
+
+    mkVpcSecurityGroup(TestServerSG, &VpcId, `test server security group'),
+    addSecurityGroupRule(TestServerSG, vpcicmp, in, "icmp", "-1", &VpcCidr),
+    addSecurityGroupRule(TestServerSG, pabeticmp, in, "icmp", "-1", "pabetCIDR")
+
+#    addSecurityGroupRule(TestServerSG, pabethttp, in, "tcp", &HTTP, "pabetCIDR"),
+#    addSecurityGroupRule(TestServerSG, pabethttps, in, "tcp", &HTTPS, "pabetCIDR"),
+#    addSecurityGroupRule(TestServerSG, vpchttp, in, "tcp", &HTTP, &VpcCidr),
+#    addSecurityGroupRule(TestServerSG, vpchttps, in, "tcp", &HTTPS, &VpcCidr),
+#    addSecurityGroupRule(TestServerSG, allhttp, in, "tcp", &HTTP, "allCIDR"),
+#    addSecurityGroupRule(TestServerSG, allhttps, in, "tcp", &HTTPS, "allCIDR"),
+
+
+  },
+
+  "Outputs" : {
+  }
+
+}

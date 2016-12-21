@@ -1,0 +1,749 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "MapR (CDF) AS Cluster [0.1.0]",
+  "Parameters": {
+    "InstanceType": {
+      "Type": "String",
+      "Default": "m3.large",
+      "Description": "Instance Type for MapR Cluster nodes",
+      "AllowedValues": [
+        "m3.large",
+        "m3.xlarge",
+        "d2.xlarge",
+        "d2.2xlarge",
+        "d2.4xlarge",
+        "d2.8xlarge",
+        "i2.xlarge",
+        "i2.2xlarge"
+      ]
+    },
+    "InstanceProfile": {
+      "Type": "String",
+      "Description": "string"
+    },
+    "InstanceSpotPrice": {
+      "Type": "String",
+      "Default": "0.00",
+      "AllowedPattern": "([0-9]{1}[.]{1}[0-9]{2})",
+      "Description": "Spot Price bid or 0.00 for on-demand instances"
+    },
+    "PersistentStorage": {
+      "Description": "EBS storage for each block device (GB; 4 devs per node); 0 indicates ephemeral storage only",
+      "Default": "0",
+      "Type": "Number",
+      "MinValue": "0",
+      "MaxValue": "1024"
+    },
+    "KeyName": {
+      "Description": "Existing EC2 KeyPair for cluster instances",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "64",
+      "AllowedPattern": "[-_ a-zA-Z0-9]*",
+      "ConstraintDescription": "a valid key"
+    },
+    "ClusterName": {
+      "Type": "String",
+      "Default": "awsmk",
+      "AllowedPattern": "([A-z]{1}[0-9A-z].*)",
+      "Description": "MapR Cluster ID"
+    },
+    "MapREdition": {
+      "Type": "String",
+      "Default": "M3",
+      "Description": "MapR Software Edition",
+      "AllowedValues": [
+        "M3"
+      ]
+    },
+    "ClusterInstanceCount": {
+      "Default": 3,
+      "Description": "Size of MapR cluster",
+      "Type": "Number",
+      "MinValue": 1,
+      "MaxValue": 99
+    },
+    "SubnetAZ1": {
+      "Description": "Subnet Id",
+      "Type": "String",
+      "Default": "subnet-00000000",
+      "AllowedPattern": "subnet-[0-9a-f]{8}",
+      "ConstraintDescription": "a valid aws subnet id"
+    },
+    "SubnetAZ2": {
+      "Description": "Subnet Id",
+      "Type": "String",
+      "Default": "subnet-00000000",
+      "AllowedPattern": "subnet-[0-9a-f]{8}",
+      "ConstraintDescription": "a valid aws subnet id"
+    },
+    "InternalSG": {
+      "Description": "Security Group ID",
+      "Type": "String",
+      "Default": "sg-00000000",
+      "AllowedPattern": "sg-[0-9a-f]{8}",
+      "ConstraintDescription": "a valid aws security group id"
+    },
+    "ExternalSG": {
+      "Description": "Security Group ID",
+      "Type": "String",
+      "Default": "sg-00000000",
+      "AllowedPattern": "sg-[0-9a-f]{8}",
+      "ConstraintDescription": "a valid aws security group id"
+    },
+    "ClusterSG": {
+      "Description": "Security Group ID",
+      "Type": "String",
+      "Default": "sg-00000000",
+      "AllowedPattern": "sg-[0-9a-f]{8}",
+      "ConstraintDescription": "a valid aws security group id"
+    },
+    "OpsAlertsTopic": {
+      "Type": "String",
+      "Description": "string"
+    },
+    "Environment": {
+      "Type": "String",
+      "Default": "NOENVIRONMENT",
+      "Description": "environment"
+    },
+    "Project": {
+      "Type": "String",
+      "Default": "sncr-bda",
+      "Description": "project"
+    }
+  },
+  "Mappings": {
+    "AWSInstanceType2Arch": {
+      "m3.medium": {
+        "Arch": "HVM64"
+      },
+      "m3.large": {
+        "Arch": "HVM64"
+      },
+      "m3.xlarge": {
+        "Arch": "HVM64"
+      },
+      "m3.2xlarge": {
+        "Arch": "HVM64"
+      },
+      "c3.large": {
+        "Arch": "HVM64"
+      },
+      "c3.xlarge": {
+        "Arch": "HVM64"
+      },
+      "c3.2xlarge": {
+        "Arch": "HVM64"
+      },
+      "c3.4xlarge": {
+        "Arch": "HVM64"
+      },
+      "c3.8xlarge": {
+        "Arch": "HVM64"
+      },
+      "d2.xlarge": {
+        "Arch": "HVM64"
+      },
+      "d2.2xlarge": {
+        "Arch": "HVM64"
+      },
+      "d2.4xlarge": {
+        "Arch": "HVM64"
+      },
+      "r3.large": {
+        "Arch": "HVM64"
+      },
+      "r3.xlarge": {
+        "Arch": "HVM64"
+      },
+      "r3.2xlarge": {
+        "Arch": "HVM64"
+      },
+      "r3.4xlarge": {
+        "Arch": "HVM64"
+      },
+      "r3.8xlarge": {
+        "Arch": "HVM64"
+      },
+      "i2.xlarge": {
+        "Arch": "HVM64"
+      },
+      "i2.2xlarge": {
+        "Arch": "HVM64"
+      },
+      "i2.4xlarge": {
+        "Arch": "HVM64"
+      },
+      "i2.8xlarge": {
+        "Arch": "HVM64"
+      },
+      "hi1.4xlarge": {
+        "Arch": "HVM64"
+      },
+      "hs1.8xlarge": {
+        "Arch": "HVM64"
+      },
+      "cr1.8xlarge": {
+        "Arch": "HVM64"
+      },
+      "cc2.8xlarge": {
+        "Arch": "HVM64"
+      }
+    },
+    "AWSRegionArch2AMI": {
+      "us-east-1": {
+        "PV64": "ami-none",
+        "HVM64": "ami-cbe938a0"
+      },
+      "us-west-1": {
+        "PV64": "ami-none",
+        "HVM64": "ami-19e7155d"
+      },
+      "us-west-2": {
+        "PV64": "ami-none",
+        "HVM64": "ami-dba1a3eb"
+      },
+      "eu-central-1": {
+        "PV64": "ami-none",
+        "HVM64": "ami-4a80ba57"
+      },
+      "eu-west-1": {
+        "PV64": "ami-none",
+        "HVM64": "ami-862e67f1"
+      },
+      "ap-southeast-1": {
+        "PV64": "ami-none",
+        "HVM64": "ami-72888b20"
+      },
+      "ap-southeast-2": {
+        "PV64": "ami-none",
+        "HVM64": "ami-49206673"
+      },
+      "ap-northeast-1": {
+        "PV64": "ami-none",
+        "HVM64": "ami-a8cf7aa8"
+      },
+      "sa-east-1": {
+        "PV64": "ami-none",
+        "HVM64": "ami-f5fd72e8"
+      }
+    },
+    "AWSRegionArch2AMIx410a": {
+      "us-east-1": {
+        "PV64": "ami-5b7e9430",
+        "HVM64": "ami-537e9438"
+      },
+      "us-west-2": {
+        "PV64": "ami-ffd8e0cf",
+        "HVM64": "ami-2de6de1d"
+      }
+    },
+    "AWSRegionArch2AMIx410b": {
+      "us-east-1": {
+        "PV64": "ami-5b7e9430",
+        "HVM64": "ami-8fc101e4"
+      },
+      "us-west-2": {
+        "PV64": "ami-ffd8e0cf",
+        "HVM64": "ami-6f87835f"
+      }
+    },
+    "AWSRegionArch2AMIx410d": {
+      "us-east-1": {
+        "PV64": "ami-12345678",
+        "HVM64": "ami-e9964082"
+      },
+      "us-west-2": {
+        "PV64": "ami-12345678",
+        "HVM64": "ami-4b2d2f7b"
+      }
+    }
+  },
+  "Conditions": {
+    "EphemeralStorage": {
+      "Fn::Equals": [
+        {
+          "Ref": "PersistentStorage"
+        },
+        "0"
+      ]
+    },
+    "OnDemandInstances": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "InstanceSpotPrice"
+            },
+            0.00
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "ClusterCompleteHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle"
+    },
+    "ClusterCompleteCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "ClusterNodes",
+      "Properties": {
+        "Handle": {
+          "Ref": "ClusterCompleteHandle"
+        },
+        "Count": {
+          "Ref": "ClusterInstanceCount"
+        },
+        "Timeout": "1200"
+      }
+    },
+    "MCSWaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle"
+    },
+    "MCSWaitCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "ClusterNodes",
+      "Properties": {
+        "Handle": {
+          "Ref": "MCSWaitHandle"
+        },
+        "Timeout": "1200"
+      }
+    },
+    "DrillWaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle"
+    },
+    "DrillWaitCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "ClusterNodes",
+      "Properties": {
+        "Handle": {
+          "Ref": "DrillWaitHandle"
+        },
+        "Timeout": "1200"
+      }
+    },
+    "ClusterNodes": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "SubnetAZ1"
+          },
+          {
+            "Ref": "SubnetAZ2"
+          }
+        ],
+        "LaunchConfigurationName": {
+          "Ref": "ClusterNodeLaunchConfig"
+        },
+        "MinSize": 0,
+        "MaxSize": {
+          "Ref": "ClusterInstanceCount"
+        },
+        "DesiredCapacity": {
+          "Ref": "ClusterInstanceCount"
+        },
+        "NotificationConfiguration": {
+          "TopicARN": {
+            "Ref": "OpsAlertsTopic"
+          },
+          "NotificationTypes": [
+            "autoscaling:EC2_INSTANCE_LAUNCH",
+            "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+            "autoscaling:EC2_INSTANCE_TERMINATE",
+            "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "XDFCLUSTERNODES",
+            "PropagateAtLaunch": "true"
+          },
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "PropagateAtLaunch": "true"
+          },
+          {
+            "Key": "environment",
+            "Value": {
+              "Ref": "Environment"
+            },
+            "PropagateAtLaunch": "true"
+          },
+          {
+            "Key": "project",
+            "Value": {
+              "Ref": "Project"
+            },
+            "PropagateAtLaunch": "true"
+          }
+        ]
+      },
+      "CreationPolicy": {
+        "ResourceSignal": {
+          "Count": {
+            "Ref": "ClusterInstanceCount"
+          },
+          "Timeout": "PT30M"
+        }
+      }
+    },
+    "ClusterNodeLaunchConfig": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "BlockDeviceMappings": {
+          "Fn::If": [
+            "EphemeralStorage",
+            [
+              {
+                "DeviceName": "/dev/sdb",
+                "VirtualName": "ephemeral0"
+              },
+              {
+                "DeviceName": "/dev/sdc",
+                "VirtualName": "ephemeral1"
+              },
+              {
+                "DeviceName": "/dev/sdd",
+                "VirtualName": "ephemeral2"
+              },
+              {
+                "DeviceName": "/dev/sde",
+                "VirtualName": "ephemeral3"
+              }
+            ],
+            [
+              {
+                "DeviceName": "/dev/sdb",
+                "Ebs": {
+                  "VolumeSize": {
+                    "Ref": "PersistentStorage"
+                  },
+                  "DeleteOnTermination": "True"
+                }
+              },
+              {
+                "DeviceName": "/dev/sdc",
+                "Ebs": {
+                  "VolumeSize": {
+                    "Ref": "PersistentStorage"
+                  },
+                  "DeleteOnTermination": "True"
+                }
+              },
+              {
+                "DeviceName": "/dev/sdd",
+                "Ebs": {
+                  "VolumeSize": {
+                    "Ref": "PersistentStorage"
+                  },
+                  "DeleteOnTermination": "True"
+                }
+              },
+              {
+                "DeviceName": "/dev/sde",
+                "Ebs": {
+                  "VolumeSize": {
+                    "Ref": "PersistentStorage"
+                  },
+                  "DeleteOnTermination": "True"
+                }
+              }
+            ]
+          ]
+        },
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionArch2AMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            {
+              "Fn::FindInMap": [
+                "AWSInstanceType2Arch",
+                {
+                  "Ref": "InstanceType"
+                },
+                "Arch"
+              ]
+            }
+          ]
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "InternalSG"
+          },
+          {
+            "Ref": "ExternalSG"
+          },
+          {
+            "Ref": "ClusterSG"
+          }
+        ],
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "SpotPrice": {
+          "Fn::If": [
+            "OnDemandInstances",
+            {
+              "Ref": "AWS::NoValue"
+            },
+            {
+              "Ref": "InstanceSpotPrice"
+            }
+          ]
+        },
+        "KeyName": {
+          "Ref": "KeyName"
+        },
+        "AssociatePublicIpAddress": "false",
+        "IamInstanceProfile": {
+          "Ref": "InstanceProfile"
+        },
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash",
+                "\n",
+                "",
+                "\n",
+                "exec > >(tee /var/log/userdata.log | logger -t userdata -s 2>/dev/console) 2>&1",
+                "\n",
+                "",
+                "\n",
+                "STACK='",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "'",
+                "\n",
+                "REGION='",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "'",
+                "\n",
+                "CLUSTER_NAME='",
+                {
+                  "Ref": "ClusterName"
+                },
+                "'",
+                "\n",
+                "MAPR_EDITION='",
+                {
+                  "Ref": "MapREdition"
+                },
+                "'",
+                "\n",
+                "CLUSTER_COMPLETE_HANDLE='",
+                {
+                  "Ref": "ClusterCompleteHandle"
+                },
+                "'",
+                "\n",
+                "MCS_WAIT_HANDLE='",
+                {
+                  "Ref": "MCSWaitHandle"
+                },
+                "'",
+                "\n",
+                "DRILL_WAIT_HANDLE='",
+                {
+                  "Ref": "DrillWaitHandle"
+                },
+                "'",
+                "\n",
+                "",
+                "\n",
+                "AWS='aws --output text'",
+                "\n",
+                "",
+                "\n",
+                "function error_exit",
+                "\n",
+                "{",
+                "\n",
+                " /opt/aws/bin/cfn-signal -e 1 --stack $STACK --region $REGION --resource ClusterNodes",
+                "\n",
+                " exit 1",
+                "\n",
+                "}",
+                "\n",
+                "",
+                "\n",
+                "## Install and Update CloudFormation",
+                "\n",
+                "yum install -y https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.amzn1.noarch.rpm",
+                "\n",
+                "easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz",
+                "\n",
+                "",
+                "\n",
+                "## Signal that the node is up",
+                "\n",
+                "/opt/aws/bin/cfn-signal -e 0 --stack $STACK --region $REGION --resource ClusterNodes",
+                "\n",
+                "",
+                "\n",
+                "## Wait for all nodes to come on-line",
+                "\n",
+                "",
+                "\n",
+                "resourceStatus=$($AWS cloudformation describe-stack-resources --region $REGION --stack-name $STACK --logical-resource-id ClusterNodes --query StackResources[].ResourceStatus )",
+                "\n",
+                "",
+                "\n",
+                "while [ \"$resourceStatus\" != \"CREATE_COMPLETE\" ]; do",
+                "\n",
+                "  sleep 30",
+                "\n",
+                "  resourceStatus=$($AWS cloudformation describe-stack-resources --region $REGION --stack-name $STACK --logical-resource-id ClusterNodes --query StackResources[].ResourceStatus )",
+                "\n",
+                "done",
+                "\n",
+                "",
+                "\n",
+                "## Find the private IP of all the nodes launched by this template",
+                "\n",
+                "$AWS ec2 describe-instances --region $REGION --filters 'Name=instance-state-name,Values=running' --query 'Reservations[].Instances[].[PrivateDnsName,AmiLaunchIndex,Tags[?Key == `aws:cloudformation:stack-name`] |[0].Value ]' |",
+                "\n",
+                "grep -w $STACK |",
+                "\n",
+                "sort -k 2 |",
+                "\n",
+                "awk '{print $1\" MAPRNODE\"NR-1}' > /tmp/maprhosts",
+                "\n",
+                "",
+                "\n",
+                "## Save off other cluster details in prep for configuration",
+                "\n",
+                "echo \"$CLUSTER_NAME\" > /tmp/mkclustername",
+                "\n",
+                "echo \"$MAPR_EDITION\" > /tmp/maprlicensetype",
+                "\n",
+                "",
+                "\n",
+                "## Run the setup to start the various services and hadoop cluster",
+                "\n",
+                "/home/mapr/sbin/deploy-mapr-ami.sh",
+                "\n",
+                "",
+                "\n",
+                "## Adjust yum repo",
+                "\n",
+                "echo [MapR_online] >> /etc/yum.repos.d/mapr.online.repo",
+                "\n",
+                "echo name=MapR Technologies >> /etc/yum.repos.d/mapr.online.repo",
+                "\n",
+                "echo baseurl=http://package.mapr.com/releases/v4.1.0/redhat/ >> /etc/yum.repos.d/mapr.online.repo",
+                "\n",
+                "echo enabled=1 >> /etc/yum.repos.d/mapr.online.repo",
+                "\n",
+                "echo gpgcheck=0 >> /etc/yum.repos.d/mapr.online.repo",
+                "\n",
+                "echo protect=1 >> /etc/yum.repos.d/mapr.online.repo",
+                "\n",
+                "echo  >> /etc/yum.repos.d/mapr.online.repo",
+                "\n",
+                "echo [MapR_ecosystem_online] >> /etc/yum.repos.d/mapr.online.repo",
+                "\n",
+                "echo name=MapR Technologies >> /etc/yum.repos.d/mapr.online.repo",
+                "\n",
+                "echo baseurl=http://package.mapr.com/releases/ecosystem-4.x/redhat >> /etc/yum.repos.d/mapr.online.repo",
+                "\n",
+                "echo enabled=1 >> /etc/yum.repos.d/mapr.online.repo",
+                "\n",
+                "echo gpgcheck=0 >> /etc/yum.repos.d/mapr.online.repo",
+                "\n",
+                "echo protect=1 >> /etc/yum.repos.d/mapr.online.repo",
+                "\n",
+                "",
+                "\n",
+                "##sed -i 's/file:///var/www/html/mapr/ecosystem-4.x/http://package.mapr.com/releases/ecosystem-4.x/redhat/' /etc/yum.repos.d/mapr.repo",
+                "\n",
+                "##sed -i 's/file:///var/www/html/mapr/v4.1.0/http://package.mapr.com/releases/ecosystem-4.x/redhat/' /etc/yum.repos.d/mapr.repo",
+                "\n",
+                "",
+                "\n",
+                "yum install mapr-spark.noarch -y",
+                "\n",
+                "/home/mapr/sbin/deploy-mapr-data-services.sh hiveserver",
+                "\n",
+                "/home/mapr/sbin/deploy-mapr-data-services.sh drill",
+                "\n",
+                "",
+                "\n",
+                "## Open up ssh to allow direct login",
+                "\n",
+                "sed -i 's/ChallengeResponseAuthentication .*no$/ChallengeResponseAuthenticationyes/' /etc/ssh/sshd_config",
+                "\n",
+                "service sshd restart",
+                "\n",
+                "",
+                "\n",
+                "## If all went well, signal success (must be done by ALL nodes)",
+                "\n",
+                "/opt/aws/bin/cfn-signal -e 0 -r 'MapR Installation complete' \"$CLUSTER_COMPLETE_HANDLE\"",
+                "\n",
+                "",
+                "\n",
+                "## Wait for all nodes to issue the signal",
+                "\n",
+                "resourceStatus=$($AWS cloudformation describe-stack-resources --region $REGION --stack-name $STACK --logical-resource-id ClusterCompleteCondition --query StackResources[].ResourceStatus)",
+                "\n",
+                "while [ \"$resourceStatus\" != \"CREATE_COMPLETE\" ]; do",
+                "\n",
+                "    sleep 10",
+                "\n",
+                "    resourceStatus=$($AWS cloudformation describe-stack-resources --region $REGION --stack-name $STACK --logical-resource-id ClusterCompleteCondition --query StackResources[].ResourceStatus )",
+                "\n",
+                "done",
+                "\n",
+                "",
+                "\n",
+                "## Signal back information for outputs (now that all nodes are up)",
+                "\n",
+                "/home/mapr/sbin/post-mcs-info.sh \"MCS_WAIT_HANDLE\"",
+                "\n",
+                "",
+                "\n",
+                "/home/mapr/sbin/post-drill-info.sh \"$DRILL_WAIT_HANDLE\"",
+                "\n"
+              ]
+            ]
+          }
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ControlSystemConsole": {
+      "Description": "MapR Control System URL and Login",
+      "Value": {
+        "Fn::GetAtt": [
+          "MCSWaitCondition",
+          "Data"
+        ]
+      }
+    },
+    "DrillClusterAccess": {
+      "Description": "Drill console access and ODBC endpoint",
+      "Value": {
+        "Fn::GetAtt": [
+          "DrillWaitCondition",
+          "Data"
+        ]
+      }
+    }
+  }
+}

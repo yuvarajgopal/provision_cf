@@ -1,0 +1,241 @@
+# -*- indent-tabs-mode: nil -*-
+#
+# nat server in the dmz
+#
+VERSION(1.4.5)
+#
+# TODO: Add network alarms
+#
+{
+ TEMPLATE(`Application Server'),
+
+  "Parameters" : {
+
+    paramSecurityGroup(InternalSG, `'),
+    paramSecurityGroup(ExternalSG, `'),
+    paramSecurityGroup(AppSG, `'),
+
+    paramSubnet(Subnet,`'),
+    paramRouteTable(PrivateRTB,`private route table for this nat'),
+    paramString(AppInstanceProfile, `'),
+
+    paramString(ChefRoles, `'),
+    paramString(ChefEnv, `'),
+    paramString(ChefServerURL, `'),
+    paramString(ChefOrg, `'),
+    paramString(ChefProxyURL, `'),
+
+    paramAmi(InstanceAMI,`'),
+    paramInstanceType(NatInstanceType, `EC2 Instance Type', "m1.medium"),
+    paramDiskSize(RootDiskSize,`',`12'),
+    paramString(RootDiskDevice, `', `/dev/sda1'),
+    paramDiskSize(OptDiskSize,`'),
+    paramInteger(MaxProvisionTime,`Provision wait time (s)', "1500", "0", "3600"),
+
+    paramString(NodeName, `', `nat'),
+    paramString(NodeIndex, `', `01'),
+
+    paramBoolean(AssignEIP, `', `False'),
+
+    paramString(OpsAlertsTopic, `'),
+    paramKey(KeyPair,`',`no-key'),
+    paramS3Bucket(PublicBucketName, `'),
+    paramS3Bucket(PrivateBucketName, `'),
+
+    paramBootPriority(0),
+    paramPurpose(infrastructure),
+
+    paramDomain(Domain, `app domain', `no.domain.com'),
+    paramString(Environment, `environment',`NOENVIRONMENT'),
+    paramString(Project, `project',`NOPROJECT')
+
+  },
+
+  "Conditions" : {
+
+    # do we need an opt volume for this instance?
+    "NeedsOptVolume" : {
+      "Fn::Not" : [{
+        "Fn::Equals" : [ cfnRef(OptDiskSize), "0" ]
+        }]
+      },
+
+    # do we need an elastic IP for this instance?
+    "NeedsEIP" : {
+        "Fn::Equals" : [ cfnRef(AssignEIP), "True" ]
+      },
+
+    # should we wait for the server to be report success?
+    "MustWait" : {
+      "Fn::Not" : [{
+        "Fn::Equals" : [ cfnRef(MaxProvisionTime), "0" ]
+        }]
+      }
+
+  },
+
+  "Mappings" : {
+    INCLUDE(`cf4/BandwidthPerInstanceType.map')
+  },
+
+  "Resources" : {
+
+
+#
+#  !!! The resource name for the Nat instance
+#  !!! MUST be named NATDevice
+#      -- the nat monitor script loks for an instance with NATDEVICE*
+#         as a tag value
+#
+
+    "NATDevice" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : cfnRef(NatInstanceType),
+        "IamInstanceProfile" : cfnRef(AppInstanceProfile),
+        "KeyName" : cfnRef(KeyPair),
+        "SourceDestCheck" : "False",
+        "NetworkInterfaces" : [{
+          "DeviceIndex"              : "0",
+          "AssociatePublicIpAddress" : "true",
+          "GroupSet"                 : json_listify(cfnRef(InternalSG),cfnRef(AppSG),cfnRef(ExternalSG)),
+          "SubnetId"                 : cfnRef(Subnet),
+          "DeleteOnTermination"      : "true"
+        }],
+        "ImageId" : cfnRef(InstanceAMI),
+        "BlockDeviceMappings" : [
+          ROOTSSD(&RootDiskSize, &RootDiskDevice)
+        ],
+        "UserData" : cfnMakeUserData(`./cf4/userdata-nat-chef-client.sh.jl'),
+        "Tags" : cfnInstanceTagList(`cfnPaste(&NodeName, &NodeIndex)')
+     }
+    },
+
+    # put this nat instance into the private routetable
+
+    mkInstanceRoute(NatRouteEntry, &PrivateRTB, "0.0.0.0/0", &NATDevice),
+
+    # if the OptDiskSize was non-zero, we need to create
+    # an ebs volume for /opt and attach it
+
+    "OptVolume" : {
+      "Type" : "AWS::EC2::Volume",
+      "Condition" : "NeedsOptVolume",
+      "DependsOn" : "NATDevice",
+      "Properties" : {
+        "Size" : cfnRef(OptDiskSize),
+        "AvailabilityZone" : cfnGetAttr("NATDevice", "AvailabilityZone"),
+        "Tags": cfnTagList(`cfnPaste(&NodeName, &NodeIndex,`":/opt"')')
+      }
+    },
+
+    "OptMount" : {
+      "Type" : "AWS::EC2::VolumeAttachment",
+      "Condition" : "NeedsOptVolume",
+      "Properties" : {
+        "InstanceId" : cfnRef(NATDevice),
+        "VolumeId"  : cfnRef(OptVolume),
+        "Device" : "OPTDEV"
+      }
+    },
+
+    # create the networking glue for this instance
+
+    CONDBLOCK(NeedsEIP)
+    mkVpcElasticIP(AppEIP, NATDevice),
+
+    r53HostAddr(AppEIPRecord, `cfnPaste(&NodeName, &NodeIndex, "-eip")',
+                &Domain, &AppEIP),
+    CONDBLOCK()
+
+    r53HostAddr(AppPrivateAddrRecord, `cfnPaste(&NodeName, &NodeIndex)',
+                &Domain,
+                `cfnGetAttr("NATDevice", "PrivateIp")'),
+
+    mkWaitConditionHandle(WaitHandle),
+
+    CONDBLOCK(MustWait)
+      mkWaitCondition(WaitCondition, "NATDevice", &WaitHandle, &MaxProvisionTime),
+    CONDBLOCK()
+
+    "AppCPUAlarmHigh": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+            "AlarmDescription": "Alert if CPU > 80% for 5 minutes",
+            "MetricName": "CPUUtilization",
+            "Namespace": "AWS/EC2",
+            "Statistic": "Average",
+            "Period": "300",
+            "EvaluationPeriods": "2",
+            "Threshold": "80",
+            "AlarmActions": [ { "Ref": "OpsAlertsTopic" } ],
+            "Dimensions": [
+                    {
+                      "Name": "InstanceId",
+                      "Value": { "Ref": "NATDevice" }
+                    }
+            ],
+            "ComparisonOperator": "GreaterThanThreshold"
+            }
+    },
+
+
+    "NatDeviceHighNetInALARM": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Alert if Net In > 80% for 5 minutes",
+        "MetricName": "NetworkIn",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": cfnFindInMap("BandwidthAlarmsPerInstanceType",
+                                  &NatInstanceType, "high"),
+        "AlarmActions": [ { "Ref": "OpsAlertsTopic" } ],
+        "Dimensions": [ {
+          "Name": "InstanceId",
+          "Value": { "Ref": "NATDevice" }
+          }
+        ],
+        "ComparisonOperator": "GreaterThanThreshold"
+      }
+    },
+
+    "NatDeviceHighNetOutALARM": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Alert if Net Out > 80% for 5 minutes",
+        "MetricName": "NetworkOut",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": cfnFindInMap("BandwidthAlarmsPerInstanceType",
+                                  &NatInstanceType, "high"),
+        "AlarmActions": [ { "Ref": "OpsAlertsTopic" } ],
+        "Dimensions": [ {
+          "Name": "InstanceId",
+          "Value": { "Ref": "NATDevice" }
+          }
+        ],
+        "ComparisonOperator": "GreaterThanThreshold"
+      }
+    }
+
+  },
+
+  "Outputs" : {
+    "NATDeviceWaitResult" : {
+      "Condition" : "MustWait",
+      "Value" : { "Fn::GetAtt" : [ "WaitCondition", "Data" ] },
+      "Description" : "Reported Wait Data"
+    }
+  }
+}
+
+# ChangeLog
+#
+# 2014-09-23 0.1.5 SGC added conditional support for EIP and WaitCondition
+#                  requires a cftgen with CONDBLOCK() support
+#
+# 2014-xx-xx 0.1.0 SGC original version

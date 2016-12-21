@@ -1,0 +1,101 @@
+
+[PROD]
+
+################################
+#
+#  perf cluster in aws prod
+#
+#
+#  This incf file is meant to be used in conjunction with the -dev.incf
+#
+#  Note that the enviropment is listed as dev
+#    That is so it can reference all the existing dev stacks and resources
+#
+#  It will typically be called with a command line like
+#    provision_aws -c sncrbda-prod-perf.conf prod
+#
+#
+#  But ...
+#    * The resources that it creates need to be launched with different
+#      stack names, specifically SNRCBDAPROD-PERF-...
+#
+#    * the nodes will be in the sncrbda-dev-rt chef environment
+#
+
+
+############################################################
+## most of this file must not be changed.
+## the settings are form the generic dev environment
+############################################################
+
+AWS_PROFILE=sncr-bda
+PRIVATE_BUCKET=private.prod.sncrbda.sncr
+
+PrivateBucketName=private.prod.sncrbda.sncr
+PublicBucketName=public.prod.sncrbda.sncr
+Domain=sncrbda.prod.cloud.synchronoss.net
+Environment=prod
+KeyPair=sncr-bda-prod
+
+ChefEnv=sncrbda-prod-perf
+
+#########################################################
+#
+# XDF Subnet Resources
+#
+#########################################################
+
+MaprNodeInstanceType=r3.2xlarge
+RtfeNodeInstanceType=m3.xlarge
+
+RUN_XDFNODE_SG_STACK=false
+
+RUN_MAPR_PG_STACK=false
+MAPR_PG_STACK_NAME=${STACK_PREFIX}-PERF-MAPR-PG
+
+# the following must be coordinated in the chef environment file
+# cldb must point to a node
+# zk must point to some number of nodes
+# the web server must be on a node
+# the order is important
+
+RUN_MAPR_NODE_STACK=0
+MAPR_NODE_STACK_NAME=${STACK_PREFIX}-PERF-MAPR-NODE
+MAPR_NODE_CF_PARAM_AppInstanceType=$MaprNodeInstanceType
+MAPR_NODE_CF_PARAM_NodeName=perfmapr
+MAPR_NODE_CF_PARAM_Volume3=50,gp2,/dev/xvdp,none
+MAPR_NODE_CF_PARAM_Volume4=50,gp2,/dev/xvdq,none
+MAPR_NODE_CF_PARAM_Volume5=50,gp2,/dev/xvdr,none
+MAPR_NODE_CF_PARAM_ClusterPG=${STACK_PREFIX}-PERF-MAPR-PG::ClusterPG
+
+RUN_RTFE_NODE_STACK=0
+RTFE_NODE_STACK_NAME=${STACK_PREFIX}-PERF-RTFE-NODE
+RTFE_NODE_CF_PARAM_NodeName=rtfe
+
+# create the elbs and their security groups for the consoles
+# see [defaults] for details
+
+RUN_MAPR_CONSOLE_SG_STACK=false
+RUN_SPARK_CONSOLE_SG_STACK=false
+RUN_DRILL_CONSOLE_SG_STACK=false
+RUN_OOZIE_CONSOLE_SG_STACK=false
+
+RUN_MAPR_CONSOLE_ELB_STACK=true
+    MAPR_CONSOLE_ELB_STACK_NAME=${STACK_PREFIX}-PERF-MAPR-CONSOLE
+    MAPR_CONSOLE_ELB_CF_PARAM_ElbCNAME=perfmapr
+    MAPR_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDAPROD-PERF-MAPR-NODE-101::Server
+
+RUN_SPARK_CONSOLE_ELB_STACK=true
+    SPARK_CONSOLE_ELB_STACK_NAME=${STACK_PREFIX}-PERF-SPARK-CONSOLE
+    SPARK_CONSOLE_ELB_CF_PARAM_ElbCNAME=perfspark
+    SPARK_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDAPROD-PERF-MAPR-NODE-101::Server
+
+RUN_DRILL_CONSOLE_ELB_STACK=true
+    DRILL_CONSOLE_ELB_STACK_NAME=${STACK_PREFIX}-PERF-DRILL-CONSOLE
+    DRILL_CONSOLE_ELB_CF_PARAM_ElbCNAME=perfdrill
+    DRILL_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDAPROD-PERF-MAPR-NODE-106::Server
+
+RUN_OOZIE_CONSOLE_ELB_STACK=true
+    OOZIE_CONSOLE_ELB_STACK_NAME=${STACK_PREFIX}-PERF-OOZIE-CONSOLE
+    OOZIE_CONSOLE_ELB_CF_PARAM_ElbCNAME=perfoozie
+    OOZIE_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDAPROD-PERF-MAPR-NODE-102::Server

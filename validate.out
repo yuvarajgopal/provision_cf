@@ -1,0 +1,102 @@
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Unable to locate credentials. You can configure credentials by running "aws configure".
+
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Traceback (most recent call last):
+  File "/usr/local/bin/aws", line 19, in <module>
+    import awscli.clidriver
+  File "/usr/local/lib/python2.7/site-packages/awscli/clidriver.py", line 17, in <module>
+    import botocore.session
+  File "/usr/local/lib/python2.7/site-packages/botocore/session.py", line 25, in <module>
+    import botocore.configloader
+  File "/usr/local/lib/python2.7/site-packages/botocore/configloader.py", line 20, in <module>
+    import botocore.exceptions
+  File "/usr/local/lib/python2.7/site-packages/botocore/exceptions.py", line 14, in <module>
+    from botocore.vendored.requests.exceptions import ConnectionError
+  File "/usr/local/lib/python2.7/site-packages/botocore/vendored/requests/__init__.py", line 58, in <module>
+    from . import utils
+  File "/usr/local/lib/python2.7/site-packages/botocore/vendored/requests/utils.py", line 26, in <module>
+    from .compat import parse_http_list as _parse_list_header
+  File "/usr/local/lib/python2.7/site-packages/botocore/vendored/requests/compat.py", line 40, in <module>
+    from Cookie import Morsel
+  File "/usr/local/Cellar/python/2.7.11/Frameworks/Python.framework/Versions/2.7/lib/python2.7/Cookie.py", line 546, in <module>
+    "["+ _LegalValueChars +"]*"        # Any word or empty string
+  File "/usr/local/Cellar/python/2.7.11/Frameworks/Python.framework/Versions/2.7/lib/python2.7/re.py", line 194, in compile
+    return _compile(pattern, flags)
+  File "/usr/local/Cellar/python/2.7.11/Frameworks/Python.framework/Versions/2.7/lib/python2.7/re.py", line 249, in _compile
+    p = sre_compile.compile(pattern, flags)
+  File "/usr/local/Cellar/python/2.7.11/Frameworks/Python.framework/Versions/2.7/lib/python2.7/sre_compile.py", line 576, in compile
+    code = _code(p, flags)
+  File "/usr/local/Cellar/python/2.7.11/Frameworks/Python.framework/Versions/2.7/lib/python2.7/sre_compile.py", line 561, in _code
+    _compile(code, p.data, flags)
+  File "/usr/local/Cellar/python/2.7.11/Frameworks/Python.framework/Versions/2.7/lib/python2.7/sre_compile.py", line 140, in _compile
+    _compile(code, av[2], flags)
+  File "/usr/local/Cellar/python/2.7.11/Frameworks/Python.framework/Versions/2.7/lib/python2.7/sre_compile.py", line 151, in _compile
+    _compile(code, av[1], flags)
+  File "/usr/local/Cellar/python/2.7.11/Frameworks/Python.framework/Versions/2.7/lib/python2.7/sre_compile.py", line 124, in _compile
+    elif _simple(av) and op is not REPEAT:
+  File "/usr/local/Cellar/python/2.7.11/Frameworks/Python.framework/Versions/2.7/lib/python2.7/sre_compile.py", line 431, in _simple
+    return lo == hi == 1 and av[2][0][0] != SUBPATTERN
+KeyboardInterrupt
+
+
+Traceback (most recent call last):
+  File "/usr/local/bin/aws", line 27, in <module>
+    sys.exit(main())
+  File "/usr/local/bin/aws", line 23, in main
+    return awscli.clidriver.main()
+  File "/usr/local/lib/python2.7/site-packages/awscli/clidriver.py", line 49, in main
+    driver = create_clidriver()
+  File "/usr/local/lib/python2.7/site-packages/awscli/clidriver.py", line 58, in create_clidriver
+    event_hooks=emitter)
+  File "/usr/local/lib/python2.7/site-packages/awscli/plugin.py", line 44, in load_plugins
+    modules = _import_plugins(plugin_mapping)
+  File "/usr/local/lib/python2.7/site-packages/awscli/plugin.py", line 61, in _import_plugins
+    module = __import__(path, fromlist=[module])
+  File "/usr/local/lib/python2.7/site-packages/awscli/handlers.py", line 39, in <module>
+    from awscli.customizations.configure.configure import register_configure_cmd
+  File "/usr/local/lib/python2.7/site-packages/awscli/customizations/configure/configure.py", line 20, in <module>
+    from awscli.customizations.configure.addmodel import AddModelCommand
+  File "/usr/local/lib/python2.7/site-packages/awscli/customizations/configure/addmodel.py", line 13, in <module>
+    import json
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/usr/local/bin/aws", line 27, in <module>
+    sys.exit(main())
+  File "/usr/local/bin/aws", line 23, in main
+    return awscli.clidriver.main()
+  File "/usr/local/lib/python2.7/site-packages/awscli/clidriver.py", line 49, in main
+    driver = create_clidriver()
+  File "/usr/local/lib/python2.7/site-packages/awscli/clidriver.py", line 58, in create_clidriver
+    event_hooks=emitter)
+  File "/usr/local/lib/python2.7/site-packages/awscli/plugin.py", line 44, in load_plugins
+    modules = _import_plugins(plugin_mapping)
+  File "/usr/local/lib/python2.7/site-packages/awscli/plugin.py", line 61, in _import_plugins
+    module = __import__(path, fromlist=[module])
+  File "/usr/local/lib/python2.7/site-packages/awscli/handlers.py", line 18, in <module>
+    """
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/usr/local/bin/aws", line 19, in <module>
+    import awscli.clidriver
+  File "/usr/local/lib/python2.7/site-packages/awscli/clidriver.py", line 35, in <module>
+    from awscli.arguments import CustomArgument
+  File "/usr/local/lib/python2.7/site-packages/awscli/arguments.py", line 38, in <module>
+    """
+KeyboardInterrupt
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Unable to locate credentials. You can configure credentials by running "aws configure".
+Unable to locate credentials. You can configure credentials by running "aws configure".

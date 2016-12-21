@@ -1,0 +1,239 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Create IAM Roles [1.8.1]",
+  "Parameters": {
+    "Domain": {
+      "Description": "app domain",
+      "Type": "String",
+      "Default": "devops.dev.cloud.synchronoss.net",
+      "AllowedPattern": "[-A-Za-z0-9.]+\\.[A-Za-z]{2,4}",
+      "ConstraintDescription": "a domain"
+    },
+    "Project": {
+      "Type": "String",
+      "Default": "NOPROJECT",
+      "Description": "project"
+    },
+    "Environment": {
+      "Type": "String",
+      "Default": "NOENVIRONMENT",
+      "Description": "environment"
+    }
+  },
+  "Resources": {
+    "AppRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "AppRole",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DescribeStackResources",
+                    "ec2:Describe*",
+                    "s3:List*",
+                    "s3:Get*",
+                    "sns:Get*",
+                    "sns:List*",
+                    "sns:Publish",
+                    "sns:Subscribe"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "AppRoleProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "AppRole"
+          }
+        ]
+      }
+    },
+    "AppInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "AppRole"
+          }
+        ]
+      }
+    },
+    "BastionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "BastionRole",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ec2:Describe*",
+                    "s3:List*",
+                    "s3:Get*",
+                    "sns:Get*",
+                    "sns:List*",
+                    "sns:Publish",
+                    "sns:Subscribe"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "BastionRoleProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "BastionRole"
+          }
+        ]
+      }
+    },
+    "NatRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "NatRole",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ec2:Describe*",
+                    "ec2:StartInstances",
+                    "ec2:StopInstances",
+                    "s3:List*",
+                    "s3:Get*",
+                    "sns:Get*",
+                    "sns:List*",
+                    "sns:Publish",
+                    "sns:Subscribe"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "NatRoleProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "NatRole"
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "AppRole": {
+      "Description": "Role for Application Servers",
+      "Value": {
+        "Ref": "AppRole"
+      }
+    },
+    "AppInstanceProfile": {
+      "Description": "Profile for the App Role",
+      "Value": {
+        "Ref": "AppInstanceProfile"
+      }
+    },
+    "BastionRole": {
+      "Description": "Role for Bastion Servers",
+      "Value": {
+        "Ref": "BastionRole"
+      }
+    },
+    "BastionRoleProfile": {
+      "Description": "Instance Profile for the Bastion Role",
+      "Value": {
+        "Ref": "BastionRoleProfile"
+      }
+    },
+    "NatRole": {
+      "Description": "Role for Nat Servers",
+      "Value": {
+        "Ref": "NatRole"
+      }
+    },
+    "NatRoleProfile": {
+      "Description": "Instance Profile for the Nat Role",
+      "Value": {
+        "Ref": "NatRoleProfile"
+      }
+    }
+  }
+}
