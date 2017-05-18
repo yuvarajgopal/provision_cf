@@ -2,16 +2,16 @@
 
 ################################
 #
-#  Add 1 node to the dev mapr cluster
+#  Add 1 node to the poc mapr cluster
 #
 #
-#  This incf file is meant to be used in conjunction with the -dev.incf
+#  This incf file is meant to be used in conjunction with the -poc.incf
 #
-#  Note that the enviropment is listed as dev
-#    That is so it can reference all the existing dev stacks and resources
+#  Note that the enviropment is listed as poc
+#    That is so it can reference all the existing poc stacks and resources
 #
 #  It will typically be called with a command line like
-#    provision_aws -c sncrbda-dev-add1.conf dev
+#    provision_aws -c sncrbda-poc.conf poc
 #
 #
 #
@@ -19,7 +19,7 @@
 
 [DEV]
 
-# most of these settings must match the -dev conf
+# most of these settings must match the -poc conf
 
 AWS_PROFILE=sncr-bda
 PRIVATE_BUCKET=private.dev.sncrbda.sncr
@@ -31,7 +31,7 @@ Environment=dev
 KeyPair=sncrbda-dev
 VpcCidr=10.238.42.0/23
 
-ChefEnv=sncrbda-dev
+ChefEnv=sncrbda-poc
 
 #########################################################
 #
@@ -44,7 +44,7 @@ ChefEnv=sncrbda-dev
 # this mostly depends on all the defaults.
 #
 
-RUN_MAPR_POC_NODE_STACK=3
+RUN_MAPR_POC_NODE_STACK=1
 #MAPR_NODE_CF_PARAM_AppInstanceType=$MaprNodeInstanceType
 #RUN_DMZ_FTP101_STACK=0
 

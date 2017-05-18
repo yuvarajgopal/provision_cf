@@ -1,0 +1,48 @@
+# -*- indent-tabs-mode: nil -*-
+#
+VERSION(1.0.0)
+#
+INCLUDE(cf4/sncr-cidrs.m4)
+#
+
+{
+  TEMPLATE(`SG for a MapR Console ELB'),
+
+  "Parameters" : {
+
+    paramVpc(VpcId, `VPC ID', `vpc-00000000'),
+    paramCidrBlock(VpcCidr, `'),
+
+    paramString(Description, `MapR'),
+    paramPort(Port, `', `8443'),
+
+    paramString(Project, `project', `NOPROJECT'),
+    paramString(Environment, `environment', `NOENVIRONMENT')
+
+  },
+
+  "Resources" : {
+
+    mkVpcSecurityGroup(MaprConsoleSG, &VpcId, `console security group'),
+
+    define(`_comma',`')
+    foreach(`x', (pabetExt, njbrwExt,
+                  fihelExt, india3Ext, india1Ext, galwayExt,
+		  ivpcUsEast1, sncr),
+           `
+           _comma
+           define(`_comma', `,')
+           addSecurityGroupRule(MaprConsoleSG,
+                         x`'mapconsole, in, "tcp", &Port, "x`'CIDR")
+			')
+
+
+  },
+
+  "Outputs" : {
+    outputValue(MaprConsoleSG, `SG for Mapr Console ELB'),
+    outputValue(Description, `Description'),
+    outputValue(Port, `Port')
+  }
+
+}

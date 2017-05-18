@@ -1,809 +1,809 @@
 {
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Subnets for DEV [1.4.1]",
-  "Parameters": {
-    "Project": {
-      "Type": "String",
-      "Default": "NOPROJECT",
-      "Description": "project"
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Subnets for DEV [1.4.1]",
+    "Parameters": {
+        "Project": {
+            "Type": "String",
+            "Default": "NOPROJECT",
+            "Description": "project"
+        },
+        "Environment": {
+            "Type": "String",
+            "Default": "NOENVIRONMENT",
+            "Description": "environment"
+        },
+        "AZ1": {
+            "Description": "First Availability Zone",
+            "Type": "String",
+            "Default": "us-east-1a",
+            "AllowedPattern": "[a-z]*-[a-z]*-[1-9][a-z]",
+            "ConstraintDescription": "must be a valid AZ"
+        },
+        "AZ2": {
+            "Description": "Second Availability Zone",
+            "Type": "String",
+            "Default": "us-east-1b",
+            "AllowedPattern": "[a-z]*-[a-z]*-[1-9][a-z]",
+            "ConstraintDescription": "must be a valid AZ"
+        },
+        "VpcId": {
+            "Description": "VPC ID",
+            "Type": "String",
+            "Default": "vpc-00000000",
+            "AllowedPattern": "vpc-[0-9a-f]{8}",
+            "ConstraintDescription": "a valid aws vpc id"
+        },
+        "DefaultAcl": {
+            "Description": "Network ACL ID",
+            "Type": "String",
+            "Default": "acl-00000000",
+            "AllowedPattern": "acl-[0-9a-f]{8}",
+            "ConstraintDescription": "a valid aws acl id"
+        },
+        "FullPublicAccessAcl": {
+            "Description": "Network ACL ID",
+            "Type": "String",
+            "Default": "acl-00000000",
+            "AllowedPattern": "acl-[0-9a-f]{8}",
+            "ConstraintDescription": "a valid aws acl id"
+        },
+        "PublicRT": {
+            "Description": "public route table for vpc",
+            "Type": "String",
+            "Default": "rtb-00000000",
+            "AllowedPattern": "rtb-[0-9a-f]{8}",
+            "ConstraintDescription": "a valid aws route table id"
+        },
+        "PrivateAz1RT": {
+            "Description": "private route table for vpc AZ1",
+            "Type": "String",
+            "Default": "rtb-00000000",
+            "AllowedPattern": "rtb-[0-9a-f]{8}",
+            "ConstraintDescription": "a valid aws route table id"
+        },
+        "PrivateAz2RT": {
+            "Description": "private route table for vpc AZ2",
+            "Type": "String",
+            "Default": "rtb-00000000",
+            "AllowedPattern": "rtb-[0-9a-f]{8}",
+            "ConstraintDescription": "a valid aws route table id"
+        },
+        "PublicXdfSubnets": {
+            "Description": "",
+            "Type": "String",
+            "Default": "True",
+            "AllowedValues": [
+                "False",
+                "True"
+            ]
+        }
     },
-    "Environment": {
-      "Type": "String",
-      "Default": "NOENVIRONMENT",
-      "Description": "environment"
+    "Mappings": {
+        "SubnetConfig": {
+            "VPC": {
+                "CIDR": "10.238.42.0/24"
+            },
+            "SNCR": {
+                "CIDR": "10.0.0.0/8"
+            },
+            "DMZ-AZ1": {
+                "CIDR": "10.238.42.0/28"
+            },
+            "MGMT-AZ1": {
+                "CIDR": "10.238.42.16/28"
+            },
+            "ACCESS-AZ1": {
+                "CIDR": "10.238.42.32/27"
+            },
+            "XDF-AZ1": {
+                "CIDR": "10.238.42.64/27"
+            },
+            "AP-AZ1": {
+                "CIDR": "10.238.42.96/27"
+            },
+            "DMZ-AZ2": {
+                "CIDR": "10.238.42.128/28"
+            },
+            "MGMT-AZ2": {
+                "CIDR": "10.238.42.144/28"
+            },
+            "ACCESS-AZ2": {
+                "CIDR": "10.238.42.160/27"
+            },
+            "XDF-AZ2": {
+                "CIDR": "10.238.42.192/27"
+            },
+            "AP-AZ2": {
+                "CIDR": "10.238.42.224/27"
+            }
+        }
     },
-    "AZ1": {
-      "Description": "First Availability Zone",
-      "Type": "String",
-      "Default": "us-east-1a",
-      "AllowedPattern": "[a-z]*-[a-z]*-[1-9][a-z]",
-      "ConstraintDescription": "must be a valid AZ"
+    "Conditions": {
+        "MakeXdfSubnetsPublic": {
+            "Fn::Equals": [
+                {
+                    "Ref": "PublicXdfSubnets"
+                },
+                "True"
+            ]
+        },
+        "MakeXdfSubnetsPrivate": {
+            "Fn::Equals": [
+                {
+                    "Ref": "PublicXdfSubnets"
+                },
+                "False"
+            ]
+        }
     },
-    "AZ2": {
-      "Description": "Second Availability Zone",
-      "Type": "String",
-      "Default": "us-east-1b",
-      "AllowedPattern": "[a-z]*-[a-z]*-[1-9][a-z]",
-      "ConstraintDescription": "must be a valid AZ"
-    },
-    "VpcId": {
-      "Description": "VPC ID",
-      "Type": "String",
-      "Default": "vpc-00000000",
-      "AllowedPattern": "vpc-[0-9a-f]{8}",
-      "ConstraintDescription": "a valid aws vpc id"
-    },
-    "DefaultAcl": {
-      "Description": "Network ACL ID",
-      "Type": "String",
-      "Default": "acl-00000000",
-      "AllowedPattern": "acl-[0-9a-f]{8}",
-      "ConstraintDescription": "a valid aws acl id"
-    },
-    "FullPublicAccessAcl": {
-      "Description": "Network ACL ID",
-      "Type": "String",
-      "Default": "acl-00000000",
-      "AllowedPattern": "acl-[0-9a-f]{8}",
-      "ConstraintDescription": "a valid aws acl id"
-    },
-    "PublicRT": {
-      "Description": "public route table for vpc",
-      "Type": "String",
-      "Default": "rtb-00000000",
-      "AllowedPattern": "rtb-[0-9a-f]{8}",
-      "ConstraintDescription": "a valid aws route table id"
-    },
-    "PrivateAz1RT": {
-      "Description": "private route table for vpc AZ1",
-      "Type": "String",
-      "Default": "rtb-00000000",
-      "AllowedPattern": "rtb-[0-9a-f]{8}",
-      "ConstraintDescription": "a valid aws route table id"
-    },
-    "PrivateAz2RT": {
-      "Description": "private route table for vpc AZ2",
-      "Type": "String",
-      "Default": "rtb-00000000",
-      "AllowedPattern": "rtb-[0-9a-f]{8}",
-      "ConstraintDescription": "a valid aws route table id"
-    },
-    "PublicXdfSubnets": {
-      "Description": "",
-      "Type": "String",
-      "Default": "True",
-      "AllowedValues": [
-        "False",
-        "True"
-      ]
+    "Resources": {
+        "DmzAZ1Subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "AvailabilityZone": {
+                    "Ref": "AZ1"
+                },
+                "CidrBlock": {
+                    "Fn::FindInMap": [
+                        "SubnetConfig",
+                        "DMZ-AZ1",
+                        "CIDR"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "DmzAZ1Subnet"
+                    },
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": {
+                            "Ref": "Environment"
+                        }
+                    },
+                    {
+                        "Key": "project",
+                        "Value": {
+                            "Ref": "Project"
+                        }
+                    }
+                ]
+            }
+        },
+        "dmzaz1toPublicRTassoc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "DmzAZ1Subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "PublicRT"
+                }
+            }
+        },
+        "xDmzAZ1SubnetNetworkAclAssoc": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "DefaultAcl"
+                },
+                "SubnetId": {
+                    "Ref": "DmzAZ1Subnet"
+                }
+            }
+        },
+        "AccessAZ1Subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "AvailabilityZone": {
+                    "Ref": "AZ1"
+                },
+                "CidrBlock": {
+                    "Fn::FindInMap": [
+                        "SubnetConfig",
+                        "ACCESS-AZ1",
+                        "CIDR"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "AccessAZ1Subnet"
+                    },
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": {
+                            "Ref": "Environment"
+                        }
+                    },
+                    {
+                        "Key": "project",
+                        "Value": {
+                            "Ref": "Project"
+                        }
+                    }
+                ]
+            }
+        },
+        "accessaz1toPublicRTassoc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "AccessAZ1Subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "PublicRT"
+                }
+            }
+        },
+        "xAccessAZ1SubnetNetworkAclAssoc": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "FullPublicAccessAcl"
+                },
+                "SubnetId": {
+                    "Ref": "AccessAZ1Subnet"
+                }
+            }
+        },
+        "XdfAZ1Subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "AvailabilityZone": {
+                    "Ref": "AZ1"
+                },
+                "CidrBlock": {
+                    "Fn::FindInMap": [
+                        "SubnetConfig",
+                        "XDF-AZ1",
+                        "CIDR"
+                    ]
+                },
+                "MapPublicIpOnLaunch": "true",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "XdfAZ1Subnet"
+                    },
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": {
+                            "Ref": "Environment"
+                        }
+                    },
+                    {
+                        "Key": "project",
+                        "Value": {
+                            "Ref": "Project"
+                        }
+                    }
+                ]
+            }
+        },
+        "xdfaz1toPrivateRTassoc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Condition": "MakeXdfSubnetsPrivate",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "XdfAZ1Subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "PrivateAz1RT"
+                }
+            }
+        },
+        "xdfaz1toPublicRTassoc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Condition": "MakeXdfSubnetsPublic",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "XdfAZ1Subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "PublicRT"
+                }
+            }
+        },
+        "xXdfAZ1SubnetNetworkAclAssoc": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "DefaultAcl"
+                },
+                "SubnetId": {
+                    "Ref": "XdfAZ1Subnet"
+                }
+            }
+        },
+        "ApAZ1Subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "AvailabilityZone": {
+                    "Ref": "AZ1"
+                },
+                "CidrBlock": {
+                    "Fn::FindInMap": [
+                        "SubnetConfig",
+                        "AP-AZ1",
+                        "CIDR"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ApAZ1Subnet"
+                    },
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": {
+                            "Ref": "Environment"
+                        }
+                    },
+                    {
+                        "Key": "project",
+                        "Value": {
+                            "Ref": "Project"
+                        }
+                    }
+                ]
+            }
+        },
+        "apaz1toPrivateRTassoc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "ApAZ1Subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "PrivateAz1RT"
+                }
+            }
+        },
+        "xApAZ1SubnetNetworkAclAssoc": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "DefaultAcl"
+                },
+                "SubnetId": {
+                    "Ref": "ApAZ1Subnet"
+                }
+            }
+        },
+        "MgmtAZ1Subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "AvailabilityZone": {
+                    "Ref": "AZ1"
+                },
+                "CidrBlock": {
+                    "Fn::FindInMap": [
+                        "SubnetConfig",
+                        "MGMT-AZ1",
+                        "CIDR"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "MgmtAZ1Subnet"
+                    },
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": {
+                            "Ref": "Environment"
+                        }
+                    },
+                    {
+                        "Key": "project",
+                        "Value": {
+                            "Ref": "Project"
+                        }
+                    }
+                ]
+            }
+        },
+        "mgmtaz1toPublicRTassoc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "MgmtAZ1Subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "PrivateAz1RT"
+                }
+            }
+        },
+        "xMgmtAZ1SubnetNetworkAclAssoc": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "DefaultAcl"
+                },
+                "SubnetId": {
+                    "Ref": "MgmtAZ1Subnet"
+                }
+            }
+        },
+        "DmzAZ2Subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "AvailabilityZone": {
+                    "Ref": "AZ2"
+                },
+                "CidrBlock": {
+                    "Fn::FindInMap": [
+                        "SubnetConfig",
+                        "DMZ-AZ2",
+                        "CIDR"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "DmzAZ2Subnet"
+                    },
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": {
+                            "Ref": "Environment"
+                        }
+                    },
+                    {
+                        "Key": "project",
+                        "Value": {
+                            "Ref": "Project"
+                        }
+                    }
+                ]
+            }
+        },
+        "dmzaz2toPublicRTassoc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "DmzAZ2Subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "PublicRT"
+                }
+            }
+        },
+        "xDmzAZ2SubnetNetworkAclAssoc": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "DefaultAcl"
+                },
+                "SubnetId": {
+                    "Ref": "DmzAZ2Subnet"
+                }
+            }
+        },
+        "AccessAZ2Subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "AvailabilityZone": {
+                    "Ref": "AZ2"
+                },
+                "CidrBlock": {
+                    "Fn::FindInMap": [
+                        "SubnetConfig",
+                        "ACCESS-AZ2",
+                        "CIDR"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "AccessAZ2Subnet"
+                    },
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": {
+                            "Ref": "Environment"
+                        }
+                    },
+                    {
+                        "Key": "project",
+                        "Value": {
+                            "Ref": "Project"
+                        }
+                    }
+                ]
+            }
+        },
+        "accessaz2toPublicRTassoc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "AccessAZ2Subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "PublicRT"
+                }
+            }
+        },
+        "xAccessAZ2SubnetNetworkAclAssoc": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "FullPublicAccessAcl"
+                },
+                "SubnetId": {
+                    "Ref": "AccessAZ2Subnet"
+                }
+            }
+        },
+        "XdfAZ2Subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "AvailabilityZone": {
+                    "Ref": "AZ2"
+                },
+                "CidrBlock": {
+                    "Fn::FindInMap": [
+                        "SubnetConfig",
+                        "XDF-AZ2",
+                        "CIDR"
+                    ]
+                },
+                "MapPublicIpOnLaunch": "true",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "XdfAZ2Subnet"
+                    },
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": {
+                            "Ref": "Environment"
+                        }
+                    },
+                    {
+                        "Key": "project",
+                        "Value": {
+                            "Ref": "Project"
+                        }
+                    }
+                ]
+            }
+        },
+        "xdfaz2toPrivateRTassoc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Condition": "MakeXdfSubnetsPrivate",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "XdfAZ2Subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "PrivateAz2RT"
+                }
+            }
+        },
+        "xdfaz2toPublicRTassoc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Condition": "MakeXdfSubnetsPublic",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "XdfAZ2Subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "PublicRT"
+                }
+            }
+        },
+        "xXdfAZ2SubnetNetworkAclAssoc": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "DefaultAcl"
+                },
+                "SubnetId": {
+                    "Ref": "XdfAZ2Subnet"
+                }
+            }
+        },
+        "ApAZ2Subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "AvailabilityZone": {
+                    "Ref": "AZ2"
+                },
+                "CidrBlock": {
+                    "Fn::FindInMap": [
+                        "SubnetConfig",
+                        "AP-AZ2",
+                        "CIDR"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ApAZ2Subnet"
+                    },
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": {
+                            "Ref": "Environment"
+                        }
+                    },
+                    {
+                        "Key": "project",
+                        "Value": {
+                            "Ref": "Project"
+                        }
+                    }
+                ]
+            }
+        },
+        "apaz2toPrivateRTassoc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "ApAZ2Subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "PrivateAz2RT"
+                }
+            }
+        },
+        "xApAZ2SubnetNetworkAclAssoc": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "DefaultAcl"
+                },
+                "SubnetId": {
+                    "Ref": "ApAZ2Subnet"
+                }
+            }
+        },
+        "MgmtAZ2Subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "AvailabilityZone": {
+                    "Ref": "AZ2"
+                },
+                "CidrBlock": {
+                    "Fn::FindInMap": [
+                        "SubnetConfig",
+                        "MGMT-AZ2",
+                        "CIDR"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "MgmtAZ2Subnet"
+                    },
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": {
+                            "Ref": "Environment"
+                        }
+                    },
+                    {
+                        "Key": "project",
+                        "Value": {
+                            "Ref": "Project"
+                        }
+                    }
+                ]
+            }
+        },
+        "mgmtaz2toPublicRTassoc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "MgmtAZ2Subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "PrivateAz2RT"
+                }
+            }
+        },
+        "xMgmtAZ2SubnetNetworkAclAssoc": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "DefaultAcl"
+                },
+                "SubnetId": {
+                    "Ref": "MgmtAZ2Subnet"
+                }
+            }
+        }
     }
-  },
-  "Mappings": {
-    "SubnetConfig": {
-      "VPC": {
-        "CIDR": "10.238.42.0/24"
-      },
-      "SNCR": {
-        "CIDR": "10.0.0.0/8"
-      },
-      "DMZ-AZ1": {
-        "CIDR": "10.238.42.0/28"
-      },
-      "MGMT-AZ1": {
-        "CIDR": "10.238.42.16/28"
-      },
-      "ACCESS-AZ1": {
-        "CIDR": "10.238.42.32/27"
-      },
-      "XDF-AZ1": {
-        "CIDR": "10.238.42.64/27"
-      },
-      "AP-AZ1": {
-        "CIDR": "10.238.42.96/27"
-      },
-      "DMZ-AZ2": {
-        "CIDR": "10.238.42.128/28"
-      },
-      "MGMT-AZ2": {
-        "CIDR": "10.238.42.144/28"
-      },
-      "ACCESS-AZ2": {
-        "CIDR": "10.238.42.160/27"
-      },
-      "XDF-AZ2": {
-        "CIDR": "10.238.42.192/27"
-      },
-      "AP-AZ2": {
-        "CIDR": "10.238.42.224/27"
-      }
-    }
-  },
-  "Conditions": {
-    "MakeXdfSubnetsPublic": {
-      "Fn::Equals": [
-        {
-          "Ref": "PublicXdfSubnets"
-        },
-        "True"
-      ]
-    },
-    "MakeXdfSubnetsPrivate": {
-      "Fn::Equals": [
-        {
-          "Ref": "PublicXdfSubnets"
-        },
-        "False"
-      ]
-    }
-  },
-  "Resources": {
-    "DmzAZ1Subnet": {
-      "Type": "AWS::EC2::Subnet",
-      "Properties": {
-        "VpcId": {
-          "Ref": "VpcId"
-        },
-        "AvailabilityZone": {
-          "Ref": "AZ1"
-        },
-        "CidrBlock": {
-          "Fn::FindInMap": [
-            "SubnetConfig",
-            "DMZ-AZ1",
-            "CIDR"
-          ]
-        },
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "DmzAZ1Subnet"
-          },
-          {
-            "Key": "Application",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
-          },
-          {
-            "Key": "environment",
-            "Value": {
-              "Ref": "Environment"
-            }
-          },
-          {
-            "Key": "project",
-            "Value": {
-              "Ref": "Project"
-            }
-          }
-        ]
-      }
-    },
-    "dmzaz1toPublicRTassoc": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "SubnetId": {
-          "Ref": "DmzAZ1Subnet"
-        },
-        "RouteTableId": {
-          "Ref": "PublicRT"
-        }
-      }
-    },
-    "xDmzAZ1SubnetNetworkAclAssoc": {
-      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties": {
-        "NetworkAclId": {
-          "Ref": "DefaultAcl"
-        },
-        "SubnetId": {
-          "Ref": "DmzAZ1Subnet"
-        }
-      }
-    },
-    "AccessAZ1Subnet": {
-      "Type": "AWS::EC2::Subnet",
-      "Properties": {
-        "VpcId": {
-          "Ref": "VpcId"
-        },
-        "AvailabilityZone": {
-          "Ref": "AZ1"
-        },
-        "CidrBlock": {
-          "Fn::FindInMap": [
-            "SubnetConfig",
-            "ACCESS-AZ1",
-            "CIDR"
-          ]
-        },
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "AccessAZ1Subnet"
-          },
-          {
-            "Key": "Application",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
-          },
-          {
-            "Key": "environment",
-            "Value": {
-              "Ref": "Environment"
-            }
-          },
-          {
-            "Key": "project",
-            "Value": {
-              "Ref": "Project"
-            }
-          }
-        ]
-      }
-    },
-    "accessaz1toPublicRTassoc": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "SubnetId": {
-          "Ref": "AccessAZ1Subnet"
-        },
-        "RouteTableId": {
-          "Ref": "PublicRT"
-        }
-      }
-    },
-    "xAccessAZ1SubnetNetworkAclAssoc": {
-      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties": {
-        "NetworkAclId": {
-          "Ref": "FullPublicAccessAcl"
-        },
-        "SubnetId": {
-          "Ref": "AccessAZ1Subnet"
-        }
-      }
-    },
-    "XdfAZ1Subnet": {
-      "Type": "AWS::EC2::Subnet",
-      "Properties": {
-        "VpcId": {
-          "Ref": "VpcId"
-        },
-        "AvailabilityZone": {
-          "Ref": "AZ1"
-        },
-        "CidrBlock": {
-          "Fn::FindInMap": [
-            "SubnetConfig",
-            "XDF-AZ1",
-            "CIDR"
-          ]
-        },
-        "MapPublicIpOnLaunch": "true",
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "XdfAZ1Subnet"
-          },
-          {
-            "Key": "Application",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
-          },
-          {
-            "Key": "environment",
-            "Value": {
-              "Ref": "Environment"
-            }
-          },
-          {
-            "Key": "project",
-            "Value": {
-              "Ref": "Project"
-            }
-          }
-        ]
-      }
-    },
-    "xdfaz1toPrivateRTassoc": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Condition": "MakeXdfSubnetsPrivate",
-      "Properties": {
-        "SubnetId": {
-          "Ref": "XdfAZ1Subnet"
-        },
-        "RouteTableId": {
-          "Ref": "PrivateAz1RT"
-        }
-      }
-    },
-    "xdfaz1toPublicRTassoc": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Condition": "MakeXdfSubnetsPublic",
-      "Properties": {
-        "SubnetId": {
-          "Ref": "XdfAZ1Subnet"
-        },
-        "RouteTableId": {
-          "Ref": "PublicRT"
-        }
-      }
-    },
-    "xXdfAZ1SubnetNetworkAclAssoc": {
-      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties": {
-        "NetworkAclId": {
-          "Ref": "DefaultAcl"
-        },
-        "SubnetId": {
-          "Ref": "XdfAZ1Subnet"
-        }
-      }
-    },
-    "ApAZ1Subnet": {
-      "Type": "AWS::EC2::Subnet",
-      "Properties": {
-        "VpcId": {
-          "Ref": "VpcId"
-        },
-        "AvailabilityZone": {
-          "Ref": "AZ1"
-        },
-        "CidrBlock": {
-          "Fn::FindInMap": [
-            "SubnetConfig",
-            "AP-AZ1",
-            "CIDR"
-          ]
-        },
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "ApAZ1Subnet"
-          },
-          {
-            "Key": "Application",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
-          },
-          {
-            "Key": "environment",
-            "Value": {
-              "Ref": "Environment"
-            }
-          },
-          {
-            "Key": "project",
-            "Value": {
-              "Ref": "Project"
-            }
-          }
-        ]
-      }
-    },
-    "apaz1toPrivateRTassoc": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "SubnetId": {
-          "Ref": "ApAZ1Subnet"
-        },
-        "RouteTableId": {
-          "Ref": "PrivateAz1RT"
-        }
-      }
-    },
-    "xApAZ1SubnetNetworkAclAssoc": {
-      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties": {
-        "NetworkAclId": {
-          "Ref": "DefaultAcl"
-        },
-        "SubnetId": {
-          "Ref": "ApAZ1Subnet"
-        }
-      }
-    },
-    "MgmtAZ1Subnet": {
-      "Type": "AWS::EC2::Subnet",
-      "Properties": {
-        "VpcId": {
-          "Ref": "VpcId"
-        },
-        "AvailabilityZone": {
-          "Ref": "AZ1"
-        },
-        "CidrBlock": {
-          "Fn::FindInMap": [
-            "SubnetConfig",
-            "MGMT-AZ1",
-            "CIDR"
-          ]
-        },
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "MgmtAZ1Subnet"
-          },
-          {
-            "Key": "Application",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
-          },
-          {
-            "Key": "environment",
-            "Value": {
-              "Ref": "Environment"
-            }
-          },
-          {
-            "Key": "project",
-            "Value": {
-              "Ref": "Project"
-            }
-          }
-        ]
-      }
-    },
-    "mgmtaz1toPublicRTassoc": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "SubnetId": {
-          "Ref": "MgmtAZ1Subnet"
-        },
-        "RouteTableId": {
-          "Ref": "PrivateAz1RT"
-        }
-      }
-    },
-    "xMgmtAZ1SubnetNetworkAclAssoc": {
-      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties": {
-        "NetworkAclId": {
-          "Ref": "DefaultAcl"
-        },
-        "SubnetId": {
-          "Ref": "MgmtAZ1Subnet"
-        }
-      }
-    },
-    "DmzAZ2Subnet": {
-      "Type": "AWS::EC2::Subnet",
-      "Properties": {
-        "VpcId": {
-          "Ref": "VpcId"
-        },
-        "AvailabilityZone": {
-          "Ref": "AZ2"
-        },
-        "CidrBlock": {
-          "Fn::FindInMap": [
-            "SubnetConfig",
-            "DMZ-AZ2",
-            "CIDR"
-          ]
-        },
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "DmzAZ2Subnet"
-          },
-          {
-            "Key": "Application",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
-          },
-          {
-            "Key": "environment",
-            "Value": {
-              "Ref": "Environment"
-            }
-          },
-          {
-            "Key": "project",
-            "Value": {
-              "Ref": "Project"
-            }
-          }
-        ]
-      }
-    },
-    "dmzaz2toPublicRTassoc": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "SubnetId": {
-          "Ref": "DmzAZ2Subnet"
-        },
-        "RouteTableId": {
-          "Ref": "PublicRT"
-        }
-      }
-    },
-    "xDmzAZ2SubnetNetworkAclAssoc": {
-      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties": {
-        "NetworkAclId": {
-          "Ref": "DefaultAcl"
-        },
-        "SubnetId": {
-          "Ref": "DmzAZ2Subnet"
-        }
-      }
-    },
-    "AccessAZ2Subnet": {
-      "Type": "AWS::EC2::Subnet",
-      "Properties": {
-        "VpcId": {
-          "Ref": "VpcId"
-        },
-        "AvailabilityZone": {
-          "Ref": "AZ2"
-        },
-        "CidrBlock": {
-          "Fn::FindInMap": [
-            "SubnetConfig",
-            "ACCESS-AZ2",
-            "CIDR"
-          ]
-        },
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "AccessAZ2Subnet"
-          },
-          {
-            "Key": "Application",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
-          },
-          {
-            "Key": "environment",
-            "Value": {
-              "Ref": "Environment"
-            }
-          },
-          {
-            "Key": "project",
-            "Value": {
-              "Ref": "Project"
-            }
-          }
-        ]
-      }
-    },
-    "accessaz2toPublicRTassoc": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "SubnetId": {
-          "Ref": "AccessAZ2Subnet"
-        },
-        "RouteTableId": {
-          "Ref": "PublicRT"
-        }
-      }
-    },
-    "xAccessAZ2SubnetNetworkAclAssoc": {
-      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties": {
-        "NetworkAclId": {
-          "Ref": "FullPublicAccessAcl"
-        },
-        "SubnetId": {
-          "Ref": "AccessAZ2Subnet"
-        }
-      }
-    },
-    "XdfAZ2Subnet": {
-      "Type": "AWS::EC2::Subnet",
-      "Properties": {
-        "VpcId": {
-          "Ref": "VpcId"
-        },
-        "AvailabilityZone": {
-          "Ref": "AZ2"
-        },
-        "CidrBlock": {
-          "Fn::FindInMap": [
-            "SubnetConfig",
-            "XDF-AZ2",
-            "CIDR"
-          ]
-        },
-        "MapPublicIpOnLaunch": "true",
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "XdfAZ2Subnet"
-          },
-          {
-            "Key": "Application",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
-          },
-          {
-            "Key": "environment",
-            "Value": {
-              "Ref": "Environment"
-            }
-          },
-          {
-            "Key": "project",
-            "Value": {
-              "Ref": "Project"
-            }
-          }
-        ]
-      }
-    },
-    "xdfaz2toPrivateRTassoc": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Condition": "MakeXdfSubnetsPrivate",
-      "Properties": {
-        "SubnetId": {
-          "Ref": "XdfAZ2Subnet"
-        },
-        "RouteTableId": {
-          "Ref": "PrivateAz2RT"
-        }
-      }
-    },
-    "xdfaz2toPublicRTassoc": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Condition": "MakeXdfSubnetsPublic",
-      "Properties": {
-        "SubnetId": {
-          "Ref": "XdfAZ2Subnet"
-        },
-        "RouteTableId": {
-          "Ref": "PublicRT"
-        }
-      }
-    },
-    "xXdfAZ2SubnetNetworkAclAssoc": {
-      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties": {
-        "NetworkAclId": {
-          "Ref": "DefaultAcl"
-        },
-        "SubnetId": {
-          "Ref": "XdfAZ2Subnet"
-        }
-      }
-    },
-    "ApAZ2Subnet": {
-      "Type": "AWS::EC2::Subnet",
-      "Properties": {
-        "VpcId": {
-          "Ref": "VpcId"
-        },
-        "AvailabilityZone": {
-          "Ref": "AZ2"
-        },
-        "CidrBlock": {
-          "Fn::FindInMap": [
-            "SubnetConfig",
-            "AP-AZ2",
-            "CIDR"
-          ]
-        },
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "ApAZ2Subnet"
-          },
-          {
-            "Key": "Application",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
-          },
-          {
-            "Key": "environment",
-            "Value": {
-              "Ref": "Environment"
-            }
-          },
-          {
-            "Key": "project",
-            "Value": {
-              "Ref": "Project"
-            }
-          }
-        ]
-      }
-    },
-    "apaz2toPrivateRTassoc": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "SubnetId": {
-          "Ref": "ApAZ2Subnet"
-        },
-        "RouteTableId": {
-          "Ref": "PrivateAz2RT"
-        }
-      }
-    },
-    "xApAZ2SubnetNetworkAclAssoc": {
-      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties": {
-        "NetworkAclId": {
-          "Ref": "DefaultAcl"
-        },
-        "SubnetId": {
-          "Ref": "ApAZ2Subnet"
-        }
-      }
-    },
-    "MgmtAZ2Subnet": {
-      "Type": "AWS::EC2::Subnet",
-      "Properties": {
-        "VpcId": {
-          "Ref": "VpcId"
-        },
-        "AvailabilityZone": {
-          "Ref": "AZ2"
-        },
-        "CidrBlock": {
-          "Fn::FindInMap": [
-            "SubnetConfig",
-            "MGMT-AZ2",
-            "CIDR"
-          ]
-        },
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "MgmtAZ2Subnet"
-          },
-          {
-            "Key": "Application",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
-          },
-          {
-            "Key": "environment",
-            "Value": {
-              "Ref": "Environment"
-            }
-          },
-          {
-            "Key": "project",
-            "Value": {
-              "Ref": "Project"
-            }
-          }
-        ]
-      }
-    },
-    "mgmtaz2toPublicRTassoc": {
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "SubnetId": {
-          "Ref": "MgmtAZ2Subnet"
-        },
-        "RouteTableId": {
-          "Ref": "PrivateAz2RT"
-        }
-      }
-    },
-    "xMgmtAZ2SubnetNetworkAclAssoc": {
-      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties": {
-        "NetworkAclId": {
-          "Ref": "DefaultAcl"
-        },
-        "SubnetId": {
-          "Ref": "MgmtAZ2Subnet"
-        }
-      }
-    }
-  }
 }

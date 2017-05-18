@@ -1,0 +1,79 @@
+#  -*- indent-tabs-mode: nil -*-
+#
+#
+# create an AWS ELB for access to the XDF console(s)
+#
+VERSION(1.0.0)
+#
+INCLUDE(cf4/sncr-cidrs.m4)
+#
+
+{
+  TEMPLATE(`XDF Access Load Balancer'),
+
+  "Parameters" : {
+    paramString(XdfAccessElbCNAME, `DNS CNAME for the XDF AccessELB',`xdf-access'),
+
+    paramPort(MaprConsolePort,`',8443),
+
+    paramInteger(MaxProvisionTime,`Provision wait time (s)', "1500", "120", "3600"),
+
+    paramSecurityGroup(InternalAccessSG,`'),
+    paramSecurityGroup(XdfAccessElbSG,`'),
+
+    paramString(OpsAlertsTopic, `'),
+
+    paramVpc(VpcId, `VPC ID'),
+    paramCidrBlock(VpcCidr, `'),
+    paramSubnet(SubnetAZ1, `'),
+    paramSubnet(SubnetAZ2, `'),
+
+    paramBootPriority(0),
+    paramPurpose(infrastructure),
+
+    paramDomain(Domain,`app domain', `devops.dev.cloud.synchronoss.net'),
+    paramString(Project, `project',`NOPROJECT'),
+    paramString(Environment, `environment',`NOENVIRONMENT')
+  },
+
+  "Resources" : {
+
+    "XdfAccessELB" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+        "SecurityGroups" : [ cfnRef(InternalAccessSG), cfnRef(XdfAccessElbSG) ],
+        "Subnets" : [ cfnRef(SubnetAZ1), cfnRef(SubnetAZ2) ],
+        "Scheme": "internet-facing",
+        "Listeners" : [
+          { "LoadBalancerPort": cfnRef(MaprConsolePort),     "Protocol": "TCP",
+            "InstancePort": cfnRef(MaprConsolePort), "InstanceProtocol": "TCP"
+          }
+         ],
+         "HealthCheck" : {
+           "Target" : cfnPaste("TCP:", cfnRef(MaprConsolePort)),
+           "HealthyThreshold" : "2",
+           "UnhealthyThreshold" : "6",
+           "Interval" : "30",
+           "Timeout" : "10"
+         },
+         "ConnectionDrainingPolicy" : {
+           "Enabled" : "true"
+         },
+         "CrossZone" : "true",
+         "Tags": cfnTagList("XdfAccessELB")
+     }
+    },
+
+    r53Cname(XdfAccessElbDNS, &XdfAccessElbCNAME, &Domain,
+             `{ "Fn::GetAtt" : [ "XdfAccessELB", "DNSName"]}')
+
+   },
+
+  "Outputs" : {
+    "MaprConsoleProxyUrl" : {
+      "Value" : cfnPaste("https://", &XdfAccessElbCNAME, ".", &Domain,
+                          ":", &MaprConsolePort)
+     }
+  }
+
+}

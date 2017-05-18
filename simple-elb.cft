@@ -1,214 +1,214 @@
 {
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Simple ELB [1.0.0]",
-  "Parameters": {
-    "ElbCNAME": {
-      "Type": "String",
-      "Description": "DNS CNAME for the ELB"
-    },
-    "InPort": {
-      "Default": "80",
-      "Description": "",
-      "Type": "Number",
-      "MinValue": "1",
-      "MaxValue": "65535"
-    },
-    "OutPort": {
-      "Default": "8080",
-      "Description": "",
-      "Type": "Number",
-      "MinValue": "1",
-      "MaxValue": "65535"
-    },
-    "SecurityGroups": {
-      "Type": "List<AWS::EC2::SecurityGroup::Id>",
-      "Description": "List of Valid Security Group Ids"
-    },
-    "Instances": {
-      "Type": "List<AWS::EC2::Instance::Id>",
-      "Description": "List of Valid Instance Ids"
-    },
-    "ElbScheme": {
-      "Type": "String",
-      "Default": "internet-facing",
-      "Description": "",
-      "AllowedValues": [
-        "internet-facing",
-        "internal"
-      ]
-    },
-    "OpsAlertsTopic": {
-      "Type": "String",
-      "Description": "string"
-    },
-    "VpcId": {
-      "Description": "VPC ID",
-      "Type": "String",
-      "Default": "vpc-00000000",
-      "AllowedPattern": "vpc-[0-9a-f]{8}",
-      "ConstraintDescription": "a valid aws vpc id"
-    },
-    "AZ1": {
-      "Description": "Availability Zone",
-      "Type": "String",
-      "AllowedPattern": "[a-z]*-[a-z]*-[1-9][a-z]",
-      "ConstraintDescription": "must be a valid AZ"
-    },
-    "AZ2": {
-      "Description": "Availability Zone",
-      "Type": "String",
-      "AllowedPattern": "[a-z]*-[a-z]*-[1-9][a-z]",
-      "ConstraintDescription": "must be a valid AZ"
-    },
-    "Subnets": {
-      "Type": "List<AWS::EC2::Subnet::Id>",
-      "Description": "List of Valid Subnet Ids"
-    },
-    "BootPriority": {
-      "Description": "Boot Priority Level",
-      "Type": "Number",
-      "Default": "1",
-      "MinValue": "0"
-    },
-    "Purpose": {
-      "Description": "Instance Purpose",
-      "Type": "String",
-      "Default": "infrastructure",
-      "AllowedPattern": "[A-Za-z0-9_-]+"
-    },
-    "Domain": {
-      "Description": "app domain",
-      "Type": "String",
-      "Default": "devops.dev.cloud.synchronoss.net",
-      "AllowedPattern": "[-A-Za-z0-9.]+\\.[A-Za-z]{2,4}",
-      "ConstraintDescription": "a domain"
-    },
-    "Project": {
-      "Type": "String",
-      "Default": "NOPROJECT",
-      "Description": "project"
-    },
-    "Environment": {
-      "Type": "String",
-      "Default": "NOENVIRONMENT",
-      "Description": "environment"
-    }
-  },
-  "Resources": {
-    "SimpleELB": {
-      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
-      "Properties": {
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Simple ELB [1.0.0]",
+    "Parameters": {
+        "ElbCNAME": {
+            "Type": "String",
+            "Description": "DNS CNAME for the ELB"
+        },
+        "InPort": {
+            "Default": "80",
+            "Description": "",
+            "Type": "Number",
+            "MinValue": "1",
+            "MaxValue": "65535"
+        },
+        "OutPort": {
+            "Default": "8080",
+            "Description": "",
+            "Type": "Number",
+            "MinValue": "1",
+            "MaxValue": "65535"
+        },
         "SecurityGroups": {
-          "Ref": "SecurityGroups"
-        },
-        "Subnets": {
-          "Ref": "Subnets"
-        },
-        "Scheme": {
-          "Ref": "ElbScheme"
+            "Type": "List<AWS::EC2::SecurityGroup::Id>",
+            "Description": "List of Valid Security Group Ids"
         },
         "Instances": {
-          "Ref": "Instances"
+            "Type": "List<AWS::EC2::Instance::Id>",
+            "Description": "List of Valid Instance Ids"
         },
-        "Listeners": [
-          {
-            "LoadBalancerPort": {
-              "Ref": "InPort"
-            },
-            "Protocol": "TCP",
-            "InstancePort": {
-              "Ref": "OutPort"
-            },
-            "InstanceProtocol": "TCP"
-          }
-        ],
-        "HealthCheck": {
-          "Target": {
-            "Fn::Join": [
-              "",
-              [
-                "TCP:",
-                {
-                  "Ref": "InPort"
-                }
-              ]
+        "ElbScheme": {
+            "Type": "String",
+            "Default": "internet-facing",
+            "Description": "",
+            "AllowedValues": [
+                "internet-facing",
+                "internal"
             ]
-          },
-          "HealthyThreshold": "2",
-          "UnhealthyThreshold": "6",
-          "Interval": "30",
-          "Timeout": "10"
         },
-        "ConnectionDrainingPolicy": {
-          "Enabled": "true"
+        "OpsAlertsTopic": {
+            "Type": "String",
+            "Description": "string"
         },
-        "CrossZone": "true"
-      }
+        "VpcId": {
+            "Description": "VPC ID",
+            "Type": "String",
+            "Default": "vpc-00000000",
+            "AllowedPattern": "vpc-[0-9a-f]{8}",
+            "ConstraintDescription": "a valid aws vpc id"
+        },
+        "AZ1": {
+            "Description": "Availability Zone",
+            "Type": "String",
+            "AllowedPattern": "[a-z]*-[a-z]*-[1-9][a-z]",
+            "ConstraintDescription": "must be a valid AZ"
+        },
+        "AZ2": {
+            "Description": "Availability Zone",
+            "Type": "String",
+            "AllowedPattern": "[a-z]*-[a-z]*-[1-9][a-z]",
+            "ConstraintDescription": "must be a valid AZ"
+        },
+        "Subnets": {
+            "Type": "List<AWS::EC2::Subnet::Id>",
+            "Description": "List of Valid Subnet Ids"
+        },
+        "BootPriority": {
+            "Description": "Boot Priority Level",
+            "Type": "Number",
+            "Default": "1",
+            "MinValue": "0"
+        },
+        "Purpose": {
+            "Description": "Instance Purpose",
+            "Type": "String",
+            "Default": "infrastructure",
+            "AllowedPattern": "[A-Za-z0-9_-]+"
+        },
+        "Domain": {
+            "Description": "app domain",
+            "Type": "String",
+            "Default": "devops.dev.cloud.synchronoss.net",
+            "AllowedPattern": "[-A-Za-z0-9.]+\\.[A-Za-z]{2,4}",
+            "ConstraintDescription": "a domain"
+        },
+        "Project": {
+            "Type": "String",
+            "Default": "NOPROJECT",
+            "Description": "project"
+        },
+        "Environment": {
+            "Type": "String",
+            "Default": "NOENVIRONMENT",
+            "Description": "environment"
+        }
     },
-    "ElbDNS": {
-      "Type": "AWS::Route53::RecordSet",
-      "Properties": {
-        "Comment": "",
-        "HostedZoneName": {
-          "Fn::Join": [
-            "",
-            [
-              {
-                "Ref": "Domain"
-              },
-              "."
-            ]
-          ]
-        },
-        "Name": {
-          "Fn::Join": [
-            "",
-            [
-              {
-                "Ref": "ElbCNAME"
-              },
-              ".",
-              {
-                "Ref": "Domain"
-              },
-              "."
-            ]
-          ]
-        },
-        "Type": "CNAME",
-        "TTL": "300",
-        "ResourceRecords": [
-          {
-            "Fn::GetAtt": [
-              "SimpleELB",
-              "DNSName"
-            ]
-          }
-        ]
-      }
-    }
-  },
-  "Outputs": {
-    "ElbUrl": {
-      "Value": {
-        "Fn::Join": [
-          "",
-          [
-            "https://",
-            {
-              "Ref": "ElbCNAME"
-            },
-            ".",
-            {
-              "Ref": "Domain"
-            },
-            ":",
-            {
-              "Ref": "InPort"
+    "Resources": {
+        "SimpleELB": {
+            "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+            "Properties": {
+                "SecurityGroups": {
+                    "Ref": "SecurityGroups"
+                },
+                "Subnets": {
+                    "Ref": "Subnets"
+                },
+                "Scheme": {
+                    "Ref": "ElbScheme"
+                },
+                "Instances": {
+                    "Ref": "Instances"
+                },
+                "Listeners": [
+                    {
+                        "LoadBalancerPort": {
+                            "Ref": "InPort"
+                        },
+                        "Protocol": "TCP",
+                        "InstancePort": {
+                            "Ref": "OutPort"
+                        },
+                        "InstanceProtocol": "TCP"
+                    }
+                ],
+                "HealthCheck": {
+                    "Target": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "TCP:",
+                                {
+                                    "Ref": "InPort"
+                                }
+                            ]
+                        ]
+                    },
+                    "HealthyThreshold": "2",
+                    "UnhealthyThreshold": "6",
+                    "Interval": "30",
+                    "Timeout": "10"
+                },
+                "ConnectionDrainingPolicy": {
+                    "Enabled": "true"
+                },
+                "CrossZone": "true"
             }
-          ]
-        ]
-      }
+        },
+        "ElbDNS": {
+            "Type": "AWS::Route53::RecordSet",
+            "Properties": {
+                "Comment": "",
+                "HostedZoneName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            {
+                                "Ref": "Domain"
+                            },
+                            "."
+                        ]
+                    ]
+                },
+                "Name": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            {
+                                "Ref": "ElbCNAME"
+                            },
+                            ".",
+                            {
+                                "Ref": "Domain"
+                            },
+                            "."
+                        ]
+                    ]
+                },
+                "Type": "CNAME",
+                "TTL": "300",
+                "ResourceRecords": [
+                    {
+                        "Fn::GetAtt": [
+                            "SimpleELB",
+                            "DNSName"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "ElbUrl": {
+            "Value": {
+                "Fn::Join": [
+                    "",
+                    [
+                        "https://",
+                        {
+                            "Ref": "ElbCNAME"
+                        },
+                        ".",
+                        {
+                            "Ref": "Domain"
+                        },
+                        ":",
+                        {
+                            "Ref": "InPort"
+                        }
+                    ]
+                ]
+            }
+        }
     }
-  }
 }

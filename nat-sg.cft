@@ -1,225 +1,225 @@
 {
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "NAT Security Group [1.5.1]",
-  "Parameters": {
-    "VpcId": {
-      "Description": "VPC ID",
-      "Type": "String",
-      "Default": "vpc-00000000",
-      "AllowedPattern": "vpc-[0-9a-f]{8}",
-      "ConstraintDescription": "a valid aws vpc id"
-    },
-    "VpcCidr": {
-      "Description": "",
-      "Type": "String",
-      "MinLength": "9",
-      "MaxLength": "18",
-      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
-      "ConstraintDescription": "a valid CIDR specification"
-    },
-    "Domain": {
-      "Description": "app domain",
-      "Type": "String",
-      "Default": "devops.dev.cloud.synchronoss.net",
-      "AllowedPattern": "[-A-Za-z0-9.]+\\.[A-Za-z]{2,4}",
-      "ConstraintDescription": "a domain"
-    },
-    "Project": {
-      "Type": "String",
-      "Default": "NOPROJECT",
-      "Description": "project"
-    },
-    "Environment": {
-      "Type": "String",
-      "Default": "NOENVIRONMENT",
-      "Description": "environment"
-    }
-  },
-  "Resources": {
-    "NatSG": {
-      "Type": "AWS::EC2::SecurityGroup",
-      "Properties": {
-        "GroupDescription": "Nat security group",
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "NAT Security Group [1.5.1]",
+    "Parameters": {
         "VpcId": {
-          "Ref": "VpcId"
+            "Description": "VPC ID",
+            "Type": "String",
+            "Default": "vpc-00000000",
+            "AllowedPattern": "vpc-[0-9a-f]{8}",
+            "ConstraintDescription": "a valid aws vpc id"
         },
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "NatSG"
-          },
-          {
-            "Key": "Application",
-            "Value": {
-              "Ref": "AWS::StackName"
+        "VpcCidr": {
+            "Description": "",
+            "Type": "String",
+            "MinLength": "9",
+            "MaxLength": "18",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+            "ConstraintDescription": "a valid CIDR specification"
+        },
+        "Domain": {
+            "Description": "app domain",
+            "Type": "String",
+            "Default": "devops.dev.cloud.synchronoss.net",
+            "AllowedPattern": "[-A-Za-z0-9.]+\\.[A-Za-z]{2,4}",
+            "ConstraintDescription": "a domain"
+        },
+        "Project": {
+            "Type": "String",
+            "Default": "NOPROJECT",
+            "Description": "project"
+        },
+        "Environment": {
+            "Type": "String",
+            "Default": "NOENVIRONMENT",
+            "Description": "environment"
+        }
+    },
+    "Resources": {
+        "NatSG": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Nat security group",
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "NatSG"
+                    },
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": {
+                            "Ref": "Environment"
+                        }
+                    },
+                    {
+                        "Key": "project",
+                        "Value": {
+                            "Ref": "Project"
+                        }
+                    }
+                ]
             }
-          },
-          {
-            "Key": "environment",
-            "Value": {
-              "Ref": "Environment"
+        },
+        "NatSGrvpcicmpin": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "NatSG"
+                },
+                "IpProtocol": "icmp",
+                "CidrIp": {
+                    "Ref": "VpcCidr"
+                },
+                "FromPort": "-1",
+                "ToPort": "-1"
             }
-          },
-          {
-            "Key": "project",
-            "Value": {
-              "Ref": "Project"
+        },
+        "NatSGrntpin": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "NatSG"
+                },
+                "IpProtocol": "udp",
+                "CidrIp": {
+                    "Ref": "VpcCidr"
+                },
+                "FromPort": "123",
+                "ToPort": "123"
             }
-          }
-        ]
-      }
+        },
+        "NatSGrhttpin": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "NatSG"
+                },
+                "IpProtocol": "tcp",
+                "CidrIp": {
+                    "Ref": "VpcCidr"
+                },
+                "FromPort": "80",
+                "ToPort": "80"
+            }
+        },
+        "NatSGrhttpsin": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "NatSG"
+                },
+                "IpProtocol": "tcp",
+                "CidrIp": {
+                    "Ref": "VpcCidr"
+                },
+                "FromPort": "443",
+                "ToPort": "443"
+            }
+        },
+        "NatSGrsmtpin": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "NatSG"
+                },
+                "IpProtocol": "tcp",
+                "CidrIp": {
+                    "Ref": "VpcCidr"
+                },
+                "FromPort": "25",
+                "ToPort": "25"
+            }
+        },
+        "NatSGrsmtpsin": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "NatSG"
+                },
+                "IpProtocol": "tcp",
+                "CidrIp": {
+                    "Ref": "VpcCidr"
+                },
+                "FromPort": "587",
+                "ToPort": "587"
+            }
+        },
+        "NatSGrntpout": {
+            "Type": "AWS::EC2::SecurityGroupEgress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "NatSG"
+                },
+                "IpProtocol": "udp",
+                "CidrIp": "0.0.0.0/0",
+                "FromPort": "123",
+                "ToPort": "123"
+            }
+        },
+        "NatSGrhttpout": {
+            "Type": "AWS::EC2::SecurityGroupEgress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "NatSG"
+                },
+                "IpProtocol": "tcp",
+                "CidrIp": "0.0.0.0/0",
+                "FromPort": "80",
+                "ToPort": "80"
+            }
+        },
+        "NatSGrhttpsout": {
+            "Type": "AWS::EC2::SecurityGroupEgress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "NatSG"
+                },
+                "IpProtocol": "tcp",
+                "CidrIp": "0.0.0.0/0",
+                "FromPort": "443",
+                "ToPort": "443"
+            }
+        },
+        "NatSGrsmtpout": {
+            "Type": "AWS::EC2::SecurityGroupEgress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "NatSG"
+                },
+                "IpProtocol": "tcp",
+                "CidrIp": "0.0.0.0/0",
+                "FromPort": "25",
+                "ToPort": "25"
+            }
+        },
+        "NatSGrsmtpsout": {
+            "Type": "AWS::EC2::SecurityGroupEgress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "NatSG"
+                },
+                "IpProtocol": "tcp",
+                "CidrIp": "0.0.0.0/0",
+                "FromPort": "587",
+                "ToPort": "587"
+            }
+        }
     },
-    "NatSGrvpcicmpin": {
-      "Type": "AWS::EC2::SecurityGroupIngress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "NatSG"
-        },
-        "IpProtocol": "icmp",
-        "CidrIp": {
-          "Ref": "VpcCidr"
-        },
-        "FromPort": "-1",
-        "ToPort": "-1"
-      }
-    },
-    "NatSGrntpin": {
-      "Type": "AWS::EC2::SecurityGroupIngress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "NatSG"
-        },
-        "IpProtocol": "udp",
-        "CidrIp": {
-          "Ref": "VpcCidr"
-        },
-        "FromPort": "123",
-        "ToPort": "123"
-      }
-    },
-    "NatSGrhttpin": {
-      "Type": "AWS::EC2::SecurityGroupIngress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "NatSG"
-        },
-        "IpProtocol": "tcp",
-        "CidrIp": {
-          "Ref": "VpcCidr"
-        },
-        "FromPort": "80",
-        "ToPort": "80"
-      }
-    },
-    "NatSGrhttpsin": {
-      "Type": "AWS::EC2::SecurityGroupIngress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "NatSG"
-        },
-        "IpProtocol": "tcp",
-        "CidrIp": {
-          "Ref": "VpcCidr"
-        },
-        "FromPort": "443",
-        "ToPort": "443"
-      }
-    },
-    "NatSGrsmtpin": {
-      "Type": "AWS::EC2::SecurityGroupIngress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "NatSG"
-        },
-        "IpProtocol": "tcp",
-        "CidrIp": {
-          "Ref": "VpcCidr"
-        },
-        "FromPort": "25",
-        "ToPort": "25"
-      }
-    },
-    "NatSGrsmtpsin": {
-      "Type": "AWS::EC2::SecurityGroupIngress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "NatSG"
-        },
-        "IpProtocol": "tcp",
-        "CidrIp": {
-          "Ref": "VpcCidr"
-        },
-        "FromPort": "587",
-        "ToPort": "587"
-      }
-    },
-    "NatSGrntpout": {
-      "Type": "AWS::EC2::SecurityGroupEgress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "NatSG"
-        },
-        "IpProtocol": "udp",
-        "CidrIp": "0.0.0.0/0",
-        "FromPort": "123",
-        "ToPort": "123"
-      }
-    },
-    "NatSGrhttpout": {
-      "Type": "AWS::EC2::SecurityGroupEgress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "NatSG"
-        },
-        "IpProtocol": "tcp",
-        "CidrIp": "0.0.0.0/0",
-        "FromPort": "80",
-        "ToPort": "80"
-      }
-    },
-    "NatSGrhttpsout": {
-      "Type": "AWS::EC2::SecurityGroupEgress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "NatSG"
-        },
-        "IpProtocol": "tcp",
-        "CidrIp": "0.0.0.0/0",
-        "FromPort": "443",
-        "ToPort": "443"
-      }
-    },
-    "NatSGrsmtpout": {
-      "Type": "AWS::EC2::SecurityGroupEgress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "NatSG"
-        },
-        "IpProtocol": "tcp",
-        "CidrIp": "0.0.0.0/0",
-        "FromPort": "25",
-        "ToPort": "25"
-      }
-    },
-    "NatSGrsmtpsout": {
-      "Type": "AWS::EC2::SecurityGroupEgress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "NatSG"
-        },
-        "IpProtocol": "tcp",
-        "CidrIp": "0.0.0.0/0",
-        "FromPort": "587",
-        "ToPort": "587"
-      }
+    "Outputs": {
+        "NatSG": {
+            "Description": "NAT Security Group",
+            "Value": {
+                "Ref": "NatSG"
+            }
+        }
     }
-  },
-  "Outputs": {
-    "NatSG": {
-      "Description": "NAT Security Group",
-      "Value": {
-        "Ref": "NatSG"
-      }
-    }
-  }
 }

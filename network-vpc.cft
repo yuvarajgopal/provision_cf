@@ -1,246 +1,246 @@
 {
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Create VPC [1.6.2]",
-  "Parameters": {
-    "Domain": {
-      "Description": "Domain",
-      "Type": "String",
-      "AllowedPattern": "[-A-Za-z0-9.]+\\.[A-Za-z]{2,4}",
-      "ConstraintDescription": "a domain"
-    },
-    "VpcCidr": {
-      "Description": "VPC CIDR",
-      "Type": "String",
-      "Default": "0.0.0.0/0",
-      "MinLength": "9",
-      "MaxLength": "18",
-      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
-      "ConstraintDescription": "a valid CIDR specification"
-    },
-    "Project": {
-      "Type": "String",
-      "Default": "NOPROJECT",
-      "Description": "project"
-    },
-    "Environment": {
-      "Type": "String",
-      "Default": "NOENVIRONMENT",
-      "Description": "environment"
-    },
-    "VpnGwType": {
-      "Description": "VPN Gateway ID",
-      "Type": "String",
-      "Default": "none",
-      "AllowedValues": [
-        "none",
-        "ipsec.1"
-      ]
-    }
-  },
-  "Conditions": {
-    "NeedsVpnGateway": {
-      "Fn::Not": [
-        {
-          "Fn::Equals": [
-            {
-              "Ref": "VpnGwType"
-            },
-            "none"
-          ]
-        }
-      ]
-    }
-  },
-  "Resources": {
-    "VpcId": {
-      "Type": "AWS::EC2::VPC",
-      "Properties": {
-        "CidrBlock": {
-          "Ref": "VpcCidr"
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Create VPC [1.6.2]",
+    "Parameters": {
+        "Domain": {
+            "Description": "Domain",
+            "Type": "String",
+            "AllowedPattern": "[-A-Za-z0-9.]+\\.[A-Za-z]{2,4}",
+            "ConstraintDescription": "a domain"
         },
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": {
-              "Fn::Join": [
-                "",
-                [
-                  {
-                    "Ref": "Project"
-                  },
-                  "-",
-                  {
-                    "Ref": "Environment"
-                  }
+        "VpcCidr": {
+            "Description": "VPC CIDR",
+            "Type": "String",
+            "Default": "0.0.0.0/0",
+            "MinLength": "9",
+            "MaxLength": "18",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+            "ConstraintDescription": "a valid CIDR specification"
+        },
+        "Project": {
+            "Type": "String",
+            "Default": "NOPROJECT",
+            "Description": "project"
+        },
+        "Environment": {
+            "Type": "String",
+            "Default": "NOENVIRONMENT",
+            "Description": "environment"
+        },
+        "VpnGwType": {
+            "Description": "VPN Gateway ID",
+            "Type": "String",
+            "Default": "none",
+            "AllowedValues": [
+                "none",
+                "ipsec.1"
+            ]
+        }
+    },
+    "Conditions": {
+        "NeedsVpnGateway": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "VpnGwType"
+                        },
+                        "none"
+                    ]
+                }
+            ]
+        }
+    },
+    "Resources": {
+        "VpcId": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": {
+                    "Ref": "VpcCidr"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "",
+                                [
+                                    {
+                                        "Ref": "Project"
+                                    },
+                                    "-",
+                                    {
+                                        "Ref": "Environment"
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": {
+                            "Ref": "Environment"
+                        }
+                    },
+                    {
+                        "Key": "project",
+                        "Value": {
+                            "Ref": "Project"
+                        }
+                    }
                 ]
-              ]
             }
-          },
-          {
-            "Key": "Application",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
-          },
-          {
-            "Key": "environment",
-            "Value": {
-              "Ref": "Environment"
-            }
-          },
-          {
-            "Key": "project",
-            "Value": {
-              "Ref": "Project"
-            }
-          }
-        ]
-      }
-    },
-    "vpcdhcpoptions": {
-      "Type": "AWS::EC2::DHCPOptions",
-      "Properties": {
-        "DomainName": {
-          "Ref": "Domain"
         },
-        "DomainNameServers": [
-          "AmazonProvidedDNS"
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "DHCPOPTS"
-          },
-          {
-            "Key": "Application",
-            "Value": {
-              "Ref": "AWS::StackName"
+        "vpcdhcpoptions": {
+            "Type": "AWS::EC2::DHCPOptions",
+            "Properties": {
+                "DomainName": {
+                    "Ref": "Domain"
+                },
+                "DomainNameServers": [
+                    "AmazonProvidedDNS"
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "DHCPOPTS"
+                    },
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": {
+                            "Ref": "Environment"
+                        }
+                    },
+                    {
+                        "Key": "project",
+                        "Value": {
+                            "Ref": "Project"
+                        }
+                    }
+                ]
             }
-          },
-          {
-            "Key": "environment",
-            "Value": {
-              "Ref": "Environment"
-            }
-          },
-          {
-            "Key": "project",
-            "Value": {
-              "Ref": "Project"
-            }
-          }
-        ]
-      }
-    },
-    "dhcpoptassoc": {
-      "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
-      "Properties": {
-        "VpcId": {
-          "Ref": "VpcId"
         },
-        "DhcpOptionsId": {
-          "Ref": "vpcdhcpoptions"
+        "dhcpoptassoc": {
+            "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "DhcpOptionsId": {
+                    "Ref": "vpcdhcpoptions"
+                }
+            }
+        },
+        "IGW": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "IGW_IGW"
+                    },
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": {
+                            "Ref": "Environment"
+                        }
+                    },
+                    {
+                        "Key": "project",
+                        "Value": {
+                            "Ref": "Project"
+                        }
+                    }
+                ]
+            }
+        },
+        "igwAttachment": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "InternetGatewayId": {
+                    "Ref": "IGW"
+                }
+            }
+        },
+        "SncrVpnGW": {
+            "Type": "AWS::EC2::VPNGateway",
+            "Condition": "NeedsVpnGateway",
+            "Properties": {
+                "Type": {
+                    "Ref": "VpnGwType"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "SncrVpnGW_VPNGW"
+                    },
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": {
+                            "Ref": "Environment"
+                        }
+                    },
+                    {
+                        "Key": "project",
+                        "Value": {
+                            "Ref": "Project"
+                        }
+                    }
+                ]
+            }
+        },
+        "vgwAttachment": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Condition": "NeedsVpnGateway",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "VpnGatewayId": {
+                    "Ref": "SncrVpnGW"
+                }
+            }
         }
-      }
     },
-    "IGW": {
-      "Type": "AWS::EC2::InternetGateway",
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "IGW_IGW"
-          },
-          {
-            "Key": "Application",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
-          },
-          {
-            "Key": "environment",
-            "Value": {
-              "Ref": "Environment"
-            }
-          },
-          {
-            "Key": "project",
-            "Value": {
-              "Ref": "Project"
-            }
-          }
-        ]
-      }
-    },
-    "igwAttachment": {
-      "Type": "AWS::EC2::VPCGatewayAttachment",
-      "Properties": {
+    "Outputs": {
         "VpcId": {
-          "Ref": "VpcId"
+            "Description": "AWS ID for VPC",
+            "Value": {
+                "Ref": "VpcId"
+            }
         },
-        "InternetGatewayId": {
-          "Ref": "IGW"
+        "IGW": {
+            "Description": "Internet Gateway Id",
+            "Value": {
+                "Ref": "IGW"
+            }
         }
-      }
-    },
-    "SncrVpnGW": {
-      "Type": "AWS::EC2::VPNGateway",
-      "Condition": "NeedsVpnGateway",
-      "Properties": {
-        "Type": {
-          "Ref": "VpnGwType"
-        },
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "SncrVpnGW_VPNGW"
-          },
-          {
-            "Key": "Application",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
-          },
-          {
-            "Key": "environment",
-            "Value": {
-              "Ref": "Environment"
-            }
-          },
-          {
-            "Key": "project",
-            "Value": {
-              "Ref": "Project"
-            }
-          }
-        ]
-      }
-    },
-    "vgwAttachment": {
-      "Type": "AWS::EC2::VPCGatewayAttachment",
-      "Condition": "NeedsVpnGateway",
-      "Properties": {
-        "VpcId": {
-          "Ref": "VpcId"
-        },
-        "VpnGatewayId": {
-          "Ref": "SncrVpnGW"
-        }
-      }
     }
-  },
-  "Outputs": {
-    "VpcId": {
-      "Description": "AWS ID for VPC",
-      "Value": {
-        "Ref": "VpcId"
-      }
-    },
-    "IGW": {
-      "Description": "Internet Gateway Id",
-      "Value": {
-        "Ref": "IGW"
-      }
-    }
-  }
 }

@@ -2,7 +2,7 @@
 #
 # Create IAM roles for server access
 #
-VERSION(sncr-bda/1.0.0)
+VERSION(sncrbda/1.0.0)
 #
 {
     TEMPLATE(`Create IAM Roles'),

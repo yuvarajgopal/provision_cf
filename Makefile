@@ -10,7 +10,7 @@ TEXT2JL = text2jl
 CONF_FILES = sncrbda-dev.conf sncrbda-dev-add1.conf \
 	sncrbda-dev-rt.conf sncrbda-dev-rt-add1.conf \
 	sncrbda-qa.conf \
-	sncrbda-prod.conf sncrbda-prod-perf.conf
+	sncrbda-prod.conf sncrbda-prod-perf.conf sncrbda-poc.conf sncrbda-mct-prod.conf sncrbda-mct-qa.conf
 
 # add additional subnet cf4 sources here
 # remember to add their map files as dependencies (far) below
@@ -112,8 +112,11 @@ cf4/userdata-nat-chef-client.sh.jl: cf4/userdata-nat-chef-client.sh
 CONF_DEFAULTS = conf/sncrbda-defaults.incf
 sncrbda-dev.conf: conf/sncrbda-dev.incf $(CONF_DEFAULT)
 sncrbda-dev-add1.conf: conf/sncrbda-dev-add1.incf $(CONF_DEFAULT)
+sncrbda-poc.conf: conf/sncrbda-poc.incf $(CONF_DEFAULT)
 sncrbda-dev-rt.conf: conf/sncrbda-dev-rt.incf $(CONF_DEFAULT)
 sncrbda-dev-rt-add1.conf: conf/sncrbda-dev-rt-add1.incf $(CONF_DEFAULT)
+sncrbda-mct-prod.conf: conf/sncrbda-mct-prod.incf $(CONF_DEFAULT)
+sncrbda-mct-qa.conf: conf/sncrbda-mct-qa.incf $(CONF_DEFAULT)
 
 sncrbda-qa.conf: conf/sncrbda-qa.incf $(CONF_DEFAULT)
 

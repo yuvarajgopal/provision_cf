@@ -1,0 +1,68 @@
+# -*- indent-tabs-mode: nil -*-
+#
+VERSION(1.1.0)
+#
+INCLUDE(cf4/sncr-cidrs.m4)
+#
+
+{
+  TEMPLATE(`SGS for a XDF specific access'),
+
+  "Parameters" : {
+
+    paramVpc(VpcId, `VPC ID', `vpc-00000000'),
+    paramCidrBlock(VpcCidr, `'),
+
+    paramPort(MaprNfs, `', `2049'),
+    paramPort(MaprNodeManager, `', `8042'),
+    paramPort(DrillConsolePort, `', `8047'),
+
+    paramPort(SparkConsolePort, `', `8080'),
+    paramPort(SparkWorkerInfo, `', `8081'),
+    paramPort(SparkExtra, `', `4040'),
+
+    paramPort(RHTTP88, `', `8088'),
+    paramPort(MaprConsolePort, `', `8443'),
+    paramPort(HiveServer, `', `10000'),
+    paramPort(HadoopJobHistory, `', `19888'),
+    paramPort(DrillDirectConnect, `', `31010'),
+
+    paramString(Project, `project',`NOPROJECT'),
+    paramString(Environment, `environment', `NOENVIRONMENT')
+
+  },
+
+  "Resources" : {
+
+    foreach( location, (pabetExt, njbrwExt, fihelExt),
+      `allowTcpFromCidrSGI(&XdfNodeSG, maprconsole`'location,
+                                          "location`'CIDR",
+                                          &MaprConsolePort),')
+
+    foreach( location, (pabetExt, njbrwExt, fihelExt),
+      `allowTcpFromCidrSGI(&XdfNodeSG, sparkconsole`'location,
+                                          "location`'CIDR",
+                                          &SparkConsolePort),')
+
+
+    foreach( location, (pabetExt, njbrwExt, fihelExt),
+      `allowTcpFromCidrSGI(&XdfNodeSG, sparkworker`'location,
+                                          "location`'CIDR",
+                                          &SparkWorkerInfo),')
+
+
+    foreach( location, (pabetExt, njbrwExt, fihelExt),
+      `allowTcpFromCidrSGI(&XdfNodeSG, sparkextra`'location,
+                                          "location`'CIDR",
+                                          &SparkExtra),')
+
+
+    mkVpcSecurityGroup(XdfNodeSG, &VpcId, `XDF Node security group')
+
+  },
+
+  "Outputs" : {
+    outputValue(XdfNodeSG, `XDF Node Security Group')
+  }
+
+}

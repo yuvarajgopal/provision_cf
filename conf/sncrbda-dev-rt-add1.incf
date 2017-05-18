@@ -59,10 +59,14 @@ RtfeNodeInstanceType=m3.xlarge
 # the web server must be on a node
 # the order is important
 
-RUN_MAPR_NODE_STACK=1
-MAPR_NODE_STACK_NAME=${STACK_PREFIX}-RT-MAPR-NODE
+RUN_MAPR_NODE_STACK=5
+MAPR_NODE_STACK_NAME=${STACK_PREFIX}-DEV-MAPR-NODE
 MAPR_NODE_CF_PARAM_AppInstanceType=$MaprNodeInstanceType
-MAPR_NODE_CF_PARAM_NodeName=rtmapr
+MAPR_NODE_CF_PARAM_Volume1=60,gp2,/dev/xvdf,/opt
+MAPR_NODE_CF_PARAM_Volume2=40,gp2,/dev/xvdg,/tmp
+MAPR_NODE_CF_PARAM_Volume3=100,gp2,/dev/xvdp,none
+MAPR_NODE_CF_PARAM_ChefEnv=sncrbda-dev
+MAPR_NODE_CF_PARAM_NodeName=mapr
 
 
 # vv I don't think this will ever be needed vv

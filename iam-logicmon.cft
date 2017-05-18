@@ -1,114 +1,114 @@
 {
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Create IAM Roles [sncrbda/1.0.0]",
-  "Parameters": {
-    "Project": {
-      "Type": "String",
-      "Default": "NOPROJECT",
-      "Description": "project"
-    },
-    "Environment": {
-      "Type": "String",
-      "Default": "NOENVIRONMENT",
-      "Description": "environment"
-    }
-  },
-  "Resources": {
-    "User": {
-      "Type": "AWS::IAM::User",
-      "Properties": {
-        "Path": "/"
-      }
-    },
-    "Key": {
-      "Type": "AWS::IAM::AccessKey",
-      "Properties": {
-        "UserName": {
-          "Ref": "User"
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Create IAM Roles [sncrbda/1.0.0]",
+    "Parameters": {
+        "Project": {
+            "Type": "String",
+            "Default": "NOPROJECT",
+            "Description": "project"
+        },
+        "Environment": {
+            "Type": "String",
+            "Default": "NOENVIRONMENT",
+            "Description": "environment"
         }
-      }
     },
-    "LogicmonIamPolicy": {
-      "Type": "AWS::IAM::Policy",
-      "Properties": {
-        "PolicyName": "logicmonRO",
-        "Users": [
-          {
-            "Ref": "User"
-          }
-        ],
-        "PolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Action": [
-                "cloudwatch:Describe*",
-                "cloudwatch:Get*",
-                "cloudwatch:List*",
-                "dynamodb:DescribeTable",
-                "dynamodb:ListTables",
-                "ec2:Describe*",
-                "s3:List*",
-                "s3:GetObject",
-                "s3:GetObjectVersion",
-                "s3:getBucketTagging",
-                "s3:GetBucketLocation",
-                "autoscaling:DescribeAutoScalingGroups",
-                "elasticache:DescribeCacheClusters",
-                "elasticache:ListTagsForResource",
-                "elasticloadbalancing:DescribeLoadBalancers",
-                "elasticloadbalancing:describeTags",
-                "kinesis:DescribeStream",
-                "kinesis:listStreams",
-                "kinesis:listTagsForStream",
-                "rds:DescribeDBInstances",
-                "rds:listTagsForResource",
-                "redshift:DescribeClusters",
-                "route53:Get*",
-                "route53:listHealthChecks",
-                "route53:listTagsForResources",
-                "sns:listTopics",
-                "sns:getTopicAttributes",
-                "ebs:describeVolumes",
-                "sqs:GetQueueAttributes",
-                "sqs:GetQueueUrl",
-                "sqs:listQueues"
-              ],
-              "Effect": "Allow",
-              "Resource": "*"
+    "Resources": {
+        "User": {
+            "Type": "AWS::IAM::User",
+            "Properties": {
+                "Path": "/"
             }
-          ]
+        },
+        "Key": {
+            "Type": "AWS::IAM::AccessKey",
+            "Properties": {
+                "UserName": {
+                    "Ref": "User"
+                }
+            }
+        },
+        "LogicmonIamPolicy": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "logicmonRO",
+                "Users": [
+                    {
+                        "Ref": "User"
+                    }
+                ],
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Action": [
+                                "cloudwatch:Describe*",
+                                "cloudwatch:Get*",
+                                "cloudwatch:List*",
+                                "dynamodb:DescribeTable",
+                                "dynamodb:ListTables",
+                                "ec2:Describe*",
+                                "s3:List*",
+                                "s3:GetObject",
+                                "s3:GetObjectVersion",
+                                "s3:getBucketTagging",
+                                "s3:GetBucketLocation",
+                                "autoscaling:DescribeAutoScalingGroups",
+                                "elasticache:DescribeCacheClusters",
+                                "elasticache:ListTagsForResource",
+                                "elasticloadbalancing:DescribeLoadBalancers",
+                                "elasticloadbalancing:describeTags",
+                                "kinesis:DescribeStream",
+                                "kinesis:listStreams",
+                                "kinesis:listTagsForStream",
+                                "rds:DescribeDBInstances",
+                                "rds:listTagsForResource",
+                                "redshift:DescribeClusters",
+                                "route53:Get*",
+                                "route53:listHealthChecks",
+                                "route53:listTagsForResources",
+                                "sns:listTopics",
+                                "sns:getTopicAttributes",
+                                "ebs:describeVolumes",
+                                "sqs:GetQueueAttributes",
+                                "sqs:GetQueueUrl",
+                                "sqs:listQueues"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        }
+                    ]
+                }
+            }
         }
-      }
+    },
+    "Outputs": {
+        "LogicmonIamPolicy": {
+            "Description": "",
+            "Value": {
+                "Ref": "LogicmonIamPolicy"
+            }
+        },
+        "User": {
+            "Description": "",
+            "Value": {
+                "Ref": "User"
+            }
+        },
+        "AccessKeyid": {
+            "Description": "AccessKeyId for the Logicmon User",
+            "Value": {
+                "Ref": "Key"
+            }
+        },
+        "SecretAccessKey": {
+            "Description": "SecretAccessKey for the Logicmon User",
+            "Value": {
+                "Fn::GetAtt": [
+                    "Key",
+                    "SecretAccessKey"
+                ]
+            }
+        }
     }
-  },
-  "Outputs": {
-    "LogicmonIamPolicy": {
-      "Description": "",
-      "Value": {
-        "Ref": "LogicmonIamPolicy"
-      }
-    },
-    "User": {
-      "Description": "",
-      "Value": {
-        "Ref": "User"
-      }
-    },
-    "AccessKeyid": {
-      "Description": "AccessKeyId for the Logicmon User",
-      "Value": {
-        "Ref": "Key"
-      }
-    },
-    "SecretAccessKey": {
-      "Description": "SecretAccessKey for the Logicmon User",
-      "Value": {
-        "Fn::GetAtt": [
-          "Key",
-          "SecretAccessKey"
-        ]
-      }
-    }
-  }
 }

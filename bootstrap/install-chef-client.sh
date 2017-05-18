@@ -83,7 +83,7 @@ cat <<EOF >> client.rb
 # The following ssl settings might not be working yet
 # Verify all HTTPS connections (recommended)
 
-ssl_verify_mode :verify_peer
+ssl_verify_mode :verify_none
 
 # OR, Verify only connections to chef-server
 #verify_api_cert true

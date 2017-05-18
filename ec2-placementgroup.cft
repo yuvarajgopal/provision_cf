@@ -1,35 +1,35 @@
 {
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Create EC2 Placement Group [1.8.1]",
-  "Parameters": {
-    "PlacementStrategy": {
-      "Type": "String",
-      "Description": "Placement Strategy",
-      "Default": "cluster",
-      "AllowedValues": [
-        "cluster"
-      ]
-    }
-  },
-  "Conditions": {
-
-  },
-  "Resources": {
-    "ClusterPG": {
-      "Type": "AWS::EC2::PlacementGroup",
-      "Properties": {
-        "Strategy": {
-          "Ref": "PlacementStrategy"
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Create EC2 Placement Group [1.8.1]",
+    "Parameters": {
+        "PlacementStrategy": {
+            "Type": "String",
+            "Description": "Placement Strategy",
+            "Default": "cluster",
+            "AllowedValues": [
+                "cluster"
+            ]
         }
-      }
+    },
+    "Conditions": {
+
+    },
+    "Resources": {
+        "ClusterPG": {
+            "Type": "AWS::EC2::PlacementGroup",
+            "Properties": {
+                "Strategy": {
+                    "Ref": "PlacementStrategy"
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "ClusterPG": {
+            "Description": "AWS PlacementGroup",
+            "Value": {
+                "Ref": "ClusterPG"
+            }
+        }
     }
-  },
-  "Outputs": {
-    "ClusterPG": {
-      "Description": "AWS PlacementGroup",
-      "Value": {
-        "Ref": "ClusterPG"
-      }
-    }
-  }
 }

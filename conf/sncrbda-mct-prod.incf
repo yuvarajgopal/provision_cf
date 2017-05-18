@@ -1,0 +1,167 @@
+
+[PROD]
+
+AWS_PROFILE=sncr-bda
+PRIVATE_BUCKET=private.prod.sncrbda.sncr
+
+PrivateBucketName=private.prod.sncrbda.sncr
+PublicBucketName=public.prod.sncrbda.sncr
+Domain=sncrbda.prod.cloud.synchronoss.net
+Environment=prod
+KeyPair=sncr-bda-prod
+VpcCidr=10.238.144.0/20
+
+ChefEnv=sncrbda-prod
+
+RUN_IAM_ROLES_STACK=false
+
+RUN_S3_BUCKETS_STACK=false
+
+RUN_CLOUDWATCH_STACK=false
+
+RUN_ROUTE53_STACK=false
+
+#   vvvvvvvvvv  only needed once, for the account
+RUN_IAM_GROUPS_STACK=false
+
+#   vvvvvvvvvv  only needed once, for the account
+RUN_IAM_LOGICMON_STACK=false
+
+# remember to add the delagation sets of this zone to the mas
+
+RUN_VPC_STACK=false
+
+# peer to US-EAST-1 IVPC, must specify the pcx id here
+VpcPeerID=pcx-cb07bfa2
+VpcPeerCIDR=10.236.100.0/23
+
+# nat gateways were built manually in prod, mostly automatically in dev
+NatGwAz1=nat-0a064e4267bcfe5d9
+NatGwAz2=nat-093b1279c7efea037
+
+RUN_ROUTING_STACK=false
+
+RUN_NETWORK_ACLS_STACK=false
+
+# must specify the environment specific network template
+#      which uses an environments specific subnet map
+
+RUN_SUBNETS_STACK=false
+SUBNETS_CF_TEMPLATE=network-subnets-prod.cft
+
+RUN_NETWORK_SGS_STACK=false
+
+#########################################################
+#
+# DMZ Subnet Resources
+#
+#########################################################
+
+RUN_DMZ_BASTION101_STACK=false
+RUN_DMZ_BASTION201_STACK=false
+
+RUN_NAT_SG_STACK=false
+
+RUN_DMZ_NAT101_STACK=false
+RUN_DMZ_NAT201_STACK=false
+RUN_NATGATEWAY_AZ1_STACK=false
+
+#########################################################
+#
+# Access Subnet Resources
+#
+#########################################################
+
+RUN_XDFNODE_SG_STACK=false
+
+RUN_XDF_ACCESS_STACK=false
+
+
+#########################################################
+#
+# XDF Subnet Resources
+#
+#########################################################
+
+RUN_RTFE_NODE_STACK=0
+RUN_MCT_RTFE_NODE_STACK=0
+
+# node1 mfs zookeeper CLDB 30+30
+# node2 mfs zookeeper RESOURCEMANAGER SPARKMASTER OOZIE
+# node3 mfs zookeeper nodemanager RESOURCEMANAGER OOZIE
+# node4 mfs nodemanager worker1 worker2
+# node5 mfs nodemanager worker1 worker2
+# node6 mfs drill
+# node7 mfs drill
+# node8 mfs drill
+
+RUN_MAPR_PG_STACK=false
+
+RUN_MAPR_NODE_STACK=0
+MAPR_NODE_CF_PARAM_AppInstanceType=r3.2xlarge
+MAPR_NODE_CF_PARAM_Volume3=200,gp2,/dev/xvdp,none
+MAPR_NODE_CF_PARAM_Volume4=200,gp2,/dev/xvdq,none
+MAPR_NODE_CF_PARAM_Volume5=200,gp2,/dev/xvdr,none
+MAPR_NODE_CF_PARAM_ClusterPG=SNCRBDAPROD-MAPR-PG::ClusterPG
+
+RUN_MAPR_MCT_NODE_STACK=0
+MAPR_MCT_NODE_CF_PARAM_AppInstanceType=r3.2xlarge
+MAPR_MCT_NODE_CF_PARAM_Volume3=200,gp2,/dev/xvdp,none
+MAPR_MCT_NODE_CF_PARAM_Volume4=200,gp2,/dev/xvdq,none
+MAPR_MCT_NODE_CF_PARAM_Volume5=200,gp2,/dev/xvdr,none
+MAPR_MCT_NODE_CF_PARAM_ClusterPG=SNCRBDAPROD-MAPR-PG::ClusterPG
+
+RUN_MCT_SAW101_STACK=0
+MCT_SAW101_CF_PARAM_AppInstanceType=m3.large
+
+# create the elbs and their security groups for the consoles
+# see [defaults] for details
+
+RUN_MAPR_CONSOLE_SG_STACK=false
+RUN_SPARK_CONSOLE_SG_STACK=false
+RUN_DRILL_CONSOLE_SG_STACK=false
+RUN_OOZIE_CONSOLE_SG_STACK=false
+RUN_MCT_MAPR_CONSOLE_SG_STACK=false
+RUN_MCT_SPARK_CONSOLE_SG_STACK=false
+RUN_MCT_DRILL_CONSOLE_SG_STACK=false
+RUN_MCT_OOZIE_CONSOLE_SG_STACK=false
+
+RUN_MAPR_CONSOLE_ELB_STACK=false
+MAPR_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDAPROD-MAPR-NODE-101::Server
+
+RUN_MCT_MAPR_CONSOLE_ELB_STACK=false
+MCT_MAPR_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDAPROD-MAPR-MCT-NODE-101::Server
+
+RUN_MCT_DRILL_CONSOLE_ELB_STACK=false
+MCT_DRILL_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDAPROD-MAPR-MCT-NODE-102::Server
+MCT_DRILL_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDAPROD-MAPR-MCT-NODE-103::Server
+
+RUN_SPARK_CONSOLE_ELB_STACK=false
+SPARK_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDAPROD-MAPR-NODE-101::Server
+
+RUN_MCT_SPARK_CONSOLE_ELB_STACK=false
+MCT_SPARK_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDAPROD-MAPR-MCT-NODE-101::Server
+
+RUN_DRILL_CONSOLE_ELB_STACK=false
+DRILL_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDAPROD-MAPR-NODE-106::Server
+
+RUN_OOZIE_CONSOLE_ELB_STACK=false
+OOZIE_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDAPROD-MAPR-NODE-102::Server
+
+RUN_MCT_OOZIE_CONSOLE_ELB_STACK=true
+MCT_OOZIE_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDAPROD-MAPR-MCT-NODE-102::Server
+
+
+#########################################################
+#
+# MGMT Subnet Resources
+#
+#########################################################
+
+RUN_DEPLOY101_STACK=false
+RUN_RSYSLOG101_STACK=false
+RUN_MCT_RTFE_CONSOLE_ELB_STACK=false
+MCT_RTFE_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDAPROD-RTFE-MCT-NODE-101::Server
+MCT_RTFE_CONSOLE_ELB_CF_PARAM_Instances=SNCRBDAPROD-RTFE-MCT-NODE-102::Server
+
+RUN_MCT_RTFE_CONSOLE_SG_STACK=false

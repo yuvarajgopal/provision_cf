@@ -1,0 +1,368 @@
+# -*- indent-tabs-mode: nil -*-
+#
+# mapr (xxdfd) autoscaling cluster
+#
+# requires
+#   -
+#
+VERSION(0.1.0)
+undefine(`output')
+
+{
+ TEMPLATE(`MapR (CDF) AS Cluster'),
+
+    "Parameters": {
+        paramOneOf(InstanceType, `Instance Type for MapR Cluster nodes',
+                `"m3.large", "m3.xlarge",
+		 "d2.xlarge", "d2.2xlarge", "d2.4xlarge", "d2.8xlarge",
+                 "i2.xlarge", "i2.2xlarge"',
+		 `m3.large'),
+        paramString(InstanceProfile),
+        paramString(InstanceSpotPrice,
+	            `Spot Price bid or 0.00 for on-demand instances',
+                    `0.00',
+                    `([0-9]{1}[.]{1}[0-9]{2})'),
+        paramDiskSize(PersistentStorage,
+		      `EBS storage for each block device (GB; 4 devs per node); 0 indicates ephemeral storage only',
+	    	      0, 0, 1024),
+        paramKey(KeyName, `Existing EC2 KeyPair for cluster instances'),
+
+        paramString(ClusterName, `MapR Cluster ID', `awsmk',
+				 `([A-z]{1}[0-9A-z].*)'),
+        paramOneOf(MapREdition, `MapR Software Edition',`"M3"', `M3'),
+        paramInteger(ClusterInstanceCount, `Size of MapR cluster', 3, 1, 99),
+
+	paramSubnet(SubnetAZ1),
+	paramSubnet(SubnetAZ2),
+
+	paramSecurityGroup(InternalSG),
+	paramSecurityGroup(ExternalSG),
+	paramSecurityGroup(ClusterSG),
+
+        paramString(OpsAlertsTopic),
+
+	paramString(Environment, `environment',`NOENVIRONMENT'),
+	paramString(Project, `project', `sncr-bda')
+
+
+    },
+    "Mappings": {
+        "AWSInstanceType2Arch": {
+            "m3.medium": {
+                "Arch": "HVM64"
+            },
+            "m3.large": {
+                "Arch": "HVM64"
+            },
+            "m3.xlarge": {
+                "Arch": "HVM64"
+            },
+            "m3.2xlarge": {
+                "Arch": "HVM64"
+            },
+            "c3.large": {
+                "Arch": "HVM64"
+            },
+            "c3.xlarge": {
+                "Arch": "HVM64"
+            },
+            "c3.2xlarge": {
+                "Arch": "HVM64"
+            },
+            "c3.4xlarge": {
+                "Arch": "HVM64"
+            },
+            "c3.8xlarge": {
+                "Arch": "HVM64"
+            },
+            "d2.xlarge": {
+                "Arch": "HVM64"
+            },
+            "d2.2xlarge": {
+                "Arch": "HVM64"
+            },
+            "d2.4xlarge": {
+                "Arch": "HVM64"
+            },
+            "r3.large": {
+                "Arch": "HVM64"
+            },
+            "r3.xlarge": {
+                "Arch": "HVM64"
+            },
+            "r3.2xlarge": {
+                "Arch": "HVM64"
+            },
+            "r3.4xlarge": {
+                "Arch": "HVM64"
+            },
+            "r3.8xlarge": {
+                "Arch": "HVM64"
+            },
+            "i2.xlarge": {
+                "Arch": "HVM64"
+            },
+            "i2.2xlarge": {
+                "Arch": "HVM64"
+            },
+            "i2.4xlarge": {
+                "Arch": "HVM64"
+            },
+            "i2.8xlarge": {
+                "Arch": "HVM64"
+            },
+            "hi1.4xlarge": {
+                "Arch": "HVM64"
+            },
+            "hs1.8xlarge": {
+                "Arch": "HVM64"
+            },
+            "cr1.8xlarge": {
+                "Arch": "HVM64"
+            },
+            "cc2.8xlarge": {
+                "Arch": "HVM64"
+            }
+        },
+        "AWSRegionArch2AMI": {
+            "us-east-1": {
+                "PV64": "ami-none",
+                "HVM64": "ami-cbe938a0"
+            },
+            "us-west-1": {
+                "PV64": "ami-none",
+                "HVM64": "ami-19e7155d"
+            },
+            "us-west-2": {
+                "PV64": "ami-none",
+                "HVM64": "ami-dba1a3eb"
+            },
+            "eu-central-1": {
+                "PV64": "ami-none",
+                "HVM64": "ami-4a80ba57"
+            },
+            "eu-west-1": {
+                "PV64": "ami-none",
+                "HVM64": "ami-862e67f1"
+            },
+            "ap-southeast-1": {
+                "PV64": "ami-none",
+                "HVM64": "ami-72888b20"
+            },
+            "ap-southeast-2": {
+                "PV64": "ami-none",
+                "HVM64": "ami-49206673"
+            },
+            "ap-northeast-1": {
+                "PV64": "ami-none",
+                "HVM64": "ami-a8cf7aa8"
+            },
+            "sa-east-1": {
+                "PV64": "ami-none",
+                "HVM64": "ami-f5fd72e8"
+            }
+        },
+        "AWSRegionArch2AMIx410a": {
+            "us-east-1": {
+                "PV64": "ami-5b7e9430",
+                "HVM64": "ami-537e9438"
+            },
+            "us-west-2": {
+                "PV64": "ami-ffd8e0cf",
+                "HVM64": "ami-2de6de1d"
+            }
+        },
+        "AWSRegionArch2AMIx410b": {
+            "us-east-1": {
+                "PV64": "ami-5b7e9430",
+                "HVM64": "ami-8fc101e4"
+            },
+            "us-west-2": {
+                "PV64": "ami-ffd8e0cf",
+                "HVM64": "ami-6f87835f"
+            }
+        },
+        "AWSRegionArch2AMIx410d": {
+            "us-east-1": {
+                "PV64": "ami-12345678",
+                "HVM64": "ami-e9964082"
+            },
+            "us-west-2": {
+                "PV64": "ami-12345678",
+                "HVM64": "ami-4b2d2f7b"
+            }
+        }
+    },
+
+    "Conditions": {
+        "EphemeralStorage": cfnEquals(&PersistentStorage, 0),
+        "OnDemandInstances": cfnNotEquals(&InstanceSpotPrice, 0.00)
+    },
+
+    "Resources": {
+
+	mkWaitConditionHandle(ClusterCompleteHandle),
+	mkWaitCondition(ClusterCompleteCondition, "ClusterNodes",
+						  &ClusterCompleteHandle,
+						  1200,
+						  &ClusterInstanceCount),
+
+        mkWaitConditionHandle(MCSWaitHandle),
+        mkWaitCondition(MCSWaitCondition, "ClusterNodes",
+                                            &MCSWaitHandle,
+					    1200),
+        mkWaitConditionHandle(DrillWaitHandle),
+        mkWaitCondition(DrillWaitCondition, "ClusterNodes",
+	                                    &DrillWaitHandle,
+					    1200),
+
+
+        "ClusterNodes": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Properties": {
+                "VPCZoneIdentifier": [
+                        cfnRef(SubnetAZ1), cfnRef(SubnetAZ2)
+                ],
+                "LaunchConfigurationName": {
+                    "Ref": "ClusterNodeLaunchConfig"
+                },
+                "MinSize": 0,
+                "MaxSize": cfnRef(ClusterInstanceCount),
+                "DesiredCapacity": cfnRef(ClusterInstanceCount),
+                "NotificationConfiguration" : {
+                  "TopicARN" : cfnRef(OpsAlertsTopic),
+                  "NotificationTypes" : [
+                    "autoscaling:EC2_INSTANCE_LAUNCH",
+                    "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+                    "autoscaling:EC2_INSTANCE_TERMINATE",
+                    "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+                  ]
+                },
+                "Tags": cfnAsgTagList("XDFCLUSTERNODES")
+            },
+            "CreationPolicy": {
+                "ResourceSignal": {
+                    "Count": cfnRef(ClusterInstanceCount),
+                    "Timeout": "PT30M"
+                }
+            }
+        },
+
+
+        "ClusterNodeLaunchConfig": {
+            "Type": "AWS::AutoScaling::LaunchConfiguration",
+            "Properties": {
+                "BlockDeviceMappings": {
+                    "Fn::If": [
+                        "EphemeralStorage",
+                        [
+                            {
+                                "DeviceName": "/dev/sdb",
+                                "VirtualName": "ephemeral0"
+                            },
+                            {
+                                "DeviceName": "/dev/sdc",
+                                "VirtualName": "ephemeral1"
+                            },
+                            {
+                                "DeviceName": "/dev/sdd",
+                                "VirtualName": "ephemeral2"
+                            },
+                            {
+                                "DeviceName": "/dev/sde",
+                                "VirtualName": "ephemeral3"
+                            }
+                        ],
+                        [
+                            {
+                                "DeviceName": "/dev/sdb",
+                                "Ebs": {
+                                    "VolumeSize": {
+                                        "Ref": "PersistentStorage"
+                                    },
+                                    "DeleteOnTermination": "True"
+                                }
+                            },
+                            {
+                                "DeviceName": "/dev/sdc",
+                                "Ebs": {
+                                    "VolumeSize": {
+                                        "Ref": "PersistentStorage"
+                                    },
+                                    "DeleteOnTermination": "True"
+                                }
+                            },
+                            {
+                                "DeviceName": "/dev/sdd",
+                                "Ebs": {
+                                    "VolumeSize": {
+                                        "Ref": "PersistentStorage"
+                                    },
+                                    "DeleteOnTermination": "True"
+                                }
+                            },
+                            {
+                                "DeviceName": "/dev/sde",
+                                "Ebs": {
+                                    "VolumeSize": {
+                                        "Ref": "PersistentStorage"
+                                    },
+                                    "DeleteOnTermination": "True"
+                                }
+                            }
+                        ]
+                    ]
+                },
+                "ImageId": {
+                    "Fn::FindInMap": [
+                        "AWSRegionArch2AMI",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        {
+                            "Fn::FindInMap": [
+                                "AWSInstanceType2Arch",
+                                {
+                                    "Ref": "InstanceType"
+                                },
+                                "Arch"
+                            ]
+                        }
+                    ]
+                },
+                "SecurityGroups": [ cfnRef(InternalSG),
+		                    cfnRef(ExternalSG),
+				    cfnRef(ClusterSG) ],
+                "InstanceType": cfnRef(InstanceType),
+                "SpotPrice": cfnIf(OnDemandInstances, `', &InstanceSpotPrice),
+                "KeyName": cfnRef(KeyName),
+                "AssociatePublicIpAddress": "false",
+                "IamInstanceProfile": {
+                    "Ref": "InstanceProfile"
+                },
+                "UserData": cfnMakeUserData(`./cf4/userdata-mapr-cluster.sh.jl')
+            }
+        }
+    },
+
+    "Outputs": {
+        "ControlSystemConsole": {
+            "Description": "MapR Control System URL and Login",
+            "Value": {
+                "Fn::GetAtt": [
+                    "MCSWaitCondition",
+                    "Data"
+                ]
+            }
+        },
+        "DrillClusterAccess": {
+            "Description": "Drill console access and ODBC endpoint",
+            "Value": {
+                "Fn::GetAtt": [
+                    "DrillWaitCondition",
+                    "Data"
+                ]
+            }
+        }
+    }
+}

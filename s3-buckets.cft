@@ -1,221 +1,221 @@
 {
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Assign Policies to S3 Buckets [1.8.1]",
-  "Parameters": {
-    "PublicBucketName": {
-      "Description": "S3 Bucket Name",
-      "Type": "String",
-      "AllowedPattern": "[-A-Za-z0-9.]{2,64}",
-      "ConstraintDescription": "a S3 bucket name"
-    },
-    "PrivateBucketName": {
-      "Description": "S3 Bucket Name",
-      "Type": "String",
-      "AllowedPattern": "[-A-Za-z0-9.]{2,64}",
-      "ConstraintDescription": "a S3 bucket name"
-    },
-    "AppRole": {
-      "Type": "String",
-      "Description": "iam app role"
-    },
-    "BastionRole": {
-      "Type": "String",
-      "Description": "iam bastion role"
-    },
-    "NatRole": {
-      "Type": "String",
-      "Description": "iam nat role"
-    },
-    "Domain": {
-      "Description": "app domain",
-      "Type": "String",
-      "Default": "devops.dev.cloud.synchronoss.net",
-      "AllowedPattern": "[-A-Za-z0-9.]+\\.[A-Za-z]{2,4}",
-      "ConstraintDescription": "a domain"
-    },
-    "Project": {
-      "Type": "String",
-      "Default": "NOPROJECT",
-      "Description": "project"
-    },
-    "Environment": {
-      "Type": "String",
-      "Default": "NOENVIRONMENT",
-      "Description": "environment"
-    }
-  },
-  "Resources": {
-    "PublicBucketPolicyConfig": {
-      "Type": "AWS::S3::BucketPolicy",
-      "Properties": {
-        "PolicyDocument": {
-          "Version": "2008-10-17",
-          "Id": "PubAdmin",
-          "Statement": [
-            {
-              "Sid": "PublicRead",
-              "Action": [
-                "s3:GetObject"
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:aws:s3:::",
-                    {
-                      "Ref": "PublicBucketName"
-                    },
-                    "/*"
-                  ]
-                ]
-              },
-              "Principal": {
-                "AWS": "*"
-              }
-            }
-          ]
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Assign Policies to S3 Buckets [1.8.1]",
+    "Parameters": {
+        "PublicBucketName": {
+            "Description": "S3 Bucket Name",
+            "Type": "String",
+            "AllowedPattern": "[-A-Za-z0-9.]{2,64}",
+            "ConstraintDescription": "a S3 bucket name"
         },
-        "Bucket": {
-          "Ref": "PublicBucketName"
-        }
-      }
-    },
-    "PrivateBucketPolicyConfig": {
-      "Type": "AWS::S3::BucketPolicy",
-      "Properties": {
-        "PolicyDocument": {
-          "Version": "2008-10-17",
-          "Id": "Admin",
-          "Statement": [
-            {
-              "Sid": "AppRoleAccess",
-              "Action": [
-                "s3:*"
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:aws:s3:::",
-                    {
-                      "Ref": "PrivateBucketName"
-                    },
-                    "/*"
-                  ]
-                ]
-              },
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:aws:iam::",
-                      {
-                        "Ref": "AWS::AccountId"
-                      },
-                      ":role/",
-                      {
-                        "Ref": "AppRole"
-                      }
-                    ]
-                  ]
-                }
-              }
-            },
-            {
-              "Sid": "BastionRoleAccess",
-              "Action": [
-                "s3:*"
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:aws:s3:::",
-                    {
-                      "Ref": "PrivateBucketName"
-                    },
-                    "/*"
-                  ]
-                ]
-              },
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:aws:iam::",
-                      {
-                        "Ref": "AWS::AccountId"
-                      },
-                      ":role/",
-                      {
-                        "Ref": "BastionRole"
-                      }
-                    ]
-                  ]
-                }
-              }
-            },
-            {
-              "Sid": "NatRoleAccess",
-              "Action": [
-                "s3:*"
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:aws:s3:::",
-                    {
-                      "Ref": "PrivateBucketName"
-                    },
-                    "/*"
-                  ]
-                ]
-              },
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:aws:iam::",
-                      {
-                        "Ref": "AWS::AccountId"
-                      },
-                      ":role/",
-                      {
-                        "Ref": "NatRole"
-                      }
-                    ]
-                  ]
-                }
-              }
-            }
-          ]
+        "PrivateBucketName": {
+            "Description": "S3 Bucket Name",
+            "Type": "String",
+            "AllowedPattern": "[-A-Za-z0-9.]{2,64}",
+            "ConstraintDescription": "a S3 bucket name"
         },
-        "Bucket": {
-          "Ref": "PrivateBucketName"
+        "AppRole": {
+            "Type": "String",
+            "Description": "iam app role"
+        },
+        "BastionRole": {
+            "Type": "String",
+            "Description": "iam bastion role"
+        },
+        "NatRole": {
+            "Type": "String",
+            "Description": "iam nat role"
+        },
+        "Domain": {
+            "Description": "app domain",
+            "Type": "String",
+            "Default": "devops.dev.cloud.synchronoss.net",
+            "AllowedPattern": "[-A-Za-z0-9.]+\\.[A-Za-z]{2,4}",
+            "ConstraintDescription": "a domain"
+        },
+        "Project": {
+            "Type": "String",
+            "Default": "NOPROJECT",
+            "Description": "project"
+        },
+        "Environment": {
+            "Type": "String",
+            "Default": "NOENVIRONMENT",
+            "Description": "environment"
         }
-      }
-    }
-  },
-  "Outputs": {
-    "PublicBucketPolicyConfig": {
-      "Description": "Access Policy for the Public Bucket",
-      "Value": {
-        "Ref": "PublicBucketPolicyConfig"
-      }
     },
-    "PrivateBucketPolicyConfig": {
-      "Description": "Access Policy for the Public Bucket",
-      "Value": {
-        "Ref": "PrivateBucketPolicyConfig"
-      }
+    "Resources": {
+        "PublicBucketPolicyConfig": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+                "PolicyDocument": {
+                    "Version": "2008-10-17",
+                    "Id": "PubAdmin",
+                    "Statement": [
+                        {
+                            "Sid": "PublicRead",
+                            "Action": [
+                                "s3:GetObject"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Fn::Join": [
+                                    "",
+                                    [
+                                        "arn:aws:s3:::",
+                                        {
+                                            "Ref": "PublicBucketName"
+                                        },
+                                        "/*"
+                                    ]
+                                ]
+                            },
+                            "Principal": {
+                                "AWS": "*"
+                            }
+                        }
+                    ]
+                },
+                "Bucket": {
+                    "Ref": "PublicBucketName"
+                }
+            }
+        },
+        "PrivateBucketPolicyConfig": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+                "PolicyDocument": {
+                    "Version": "2008-10-17",
+                    "Id": "Admin",
+                    "Statement": [
+                        {
+                            "Sid": "AppRoleAccess",
+                            "Action": [
+                                "s3:*"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Fn::Join": [
+                                    "",
+                                    [
+                                        "arn:aws:s3:::",
+                                        {
+                                            "Ref": "PrivateBucketName"
+                                        },
+                                        "/*"
+                                    ]
+                                ]
+                            },
+                            "Principal": {
+                                "AWS": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "arn:aws:iam::",
+                                            {
+                                                "Ref": "AWS::AccountId"
+                                            },
+                                            ":role/",
+                                            {
+                                                "Ref": "AppRole"
+                                            }
+                                        ]
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "Sid": "BastionRoleAccess",
+                            "Action": [
+                                "s3:*"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Fn::Join": [
+                                    "",
+                                    [
+                                        "arn:aws:s3:::",
+                                        {
+                                            "Ref": "PrivateBucketName"
+                                        },
+                                        "/*"
+                                    ]
+                                ]
+                            },
+                            "Principal": {
+                                "AWS": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "arn:aws:iam::",
+                                            {
+                                                "Ref": "AWS::AccountId"
+                                            },
+                                            ":role/",
+                                            {
+                                                "Ref": "BastionRole"
+                                            }
+                                        ]
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "Sid": "NatRoleAccess",
+                            "Action": [
+                                "s3:*"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Fn::Join": [
+                                    "",
+                                    [
+                                        "arn:aws:s3:::",
+                                        {
+                                            "Ref": "PrivateBucketName"
+                                        },
+                                        "/*"
+                                    ]
+                                ]
+                            },
+                            "Principal": {
+                                "AWS": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "arn:aws:iam::",
+                                            {
+                                                "Ref": "AWS::AccountId"
+                                            },
+                                            ":role/",
+                                            {
+                                                "Ref": "NatRole"
+                                            }
+                                        ]
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
+                "Bucket": {
+                    "Ref": "PrivateBucketName"
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "PublicBucketPolicyConfig": {
+            "Description": "Access Policy for the Public Bucket",
+            "Value": {
+                "Ref": "PublicBucketPolicyConfig"
+            }
+        },
+        "PrivateBucketPolicyConfig": {
+            "Description": "Access Policy for the Public Bucket",
+            "Value": {
+                "Ref": "PrivateBucketPolicyConfig"
+            }
+        }
     }
-  }
 }

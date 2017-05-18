@@ -1,64 +1,64 @@
 {
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Set Up CloudTrail Logging [1.8.1]",
-  "Parameters": {
-    "LoggingBucketName": {
-      "Description": "S3 Bucket Name",
-      "Type": "String",
-      "AllowedPattern": "[-A-Za-z0-9.]{2,64}",
-      "ConstraintDescription": "a S3 bucket name"
-    },
-    "OpsAlertsTopic": {
-      "Type": "String",
-      "Description": "string"
-    },
-    "Environment": {
-      "Type": "String",
-      "Default": "NOENVIRONMENT",
-      "Description": "environment"
-    },
-    "Project": {
-      "Type": "String",
-      "Default": "NOPROJECT",
-      "Description": "project"
-    }
-  },
-  "Resources": {
-    "LoggingBucket": {
-      "Type": "AWS::S3::Bucket",
-      "DeletionPolicy": "Retain",
-      "Properties": {
-        "BucketName": {
-          "Ref": "LoggingBucketName"
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Set Up CloudTrail Logging [1.8.1]",
+    "Parameters": {
+        "LoggingBucketName": {
+            "Description": "S3 Bucket Name",
+            "Type": "String",
+            "AllowedPattern": "[-A-Za-z0-9.]{2,64}",
+            "ConstraintDescription": "a S3 bucket name"
         },
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "LoggingBucket"
-          },
-          {
-            "Key": "Application",
-            "Value": {
-              "Ref": "AWS::StackName"
+        "OpsAlertsTopic": {
+            "Type": "String",
+            "Description": "string"
+        },
+        "Environment": {
+            "Type": "String",
+            "Default": "NOENVIRONMENT",
+            "Description": "environment"
+        },
+        "Project": {
+            "Type": "String",
+            "Default": "NOPROJECT",
+            "Description": "project"
+        }
+    },
+    "Resources": {
+        "LoggingBucket": {
+            "Type": "AWS::S3::Bucket",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "BucketName": {
+                    "Ref": "LoggingBucketName"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "LoggingBucket"
+                    },
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": {
+                            "Ref": "Environment"
+                        }
+                    },
+                    {
+                        "Key": "project",
+                        "Value": {
+                            "Ref": "Project"
+                        }
+                    }
+                ]
             }
-          },
-          {
-            "Key": "environment",
-            "Value": {
-              "Ref": "Environment"
-            }
-          },
-          {
-            "Key": "project",
-            "Value": {
-              "Ref": "Project"
-            }
-          }
-        ]
-      }
-    }
-  },
-  "Outputs": {
+        }
+    },
+    "Outputs": {
 
-  }
+    }
 }

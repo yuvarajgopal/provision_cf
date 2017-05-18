@@ -1,79 +1,79 @@
 {
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Create CloudWatch Alert Topics [1.4.0]",
-  "Parameters": {
-    "OperatorEmail": {
-      "Description": "email distro for operations",
-      "Type": "String",
-      "AllowedPattern": "[a-zA-Z][-a-zA-Z0-9._%+]*@[-A-Za-z0-9.]+\\.[A-Za-z]{2,4}",
-      "ConstraintDescription": "an email address"
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Create CloudWatch Alert Topics [1.4.0]",
+    "Parameters": {
+        "OperatorEmail": {
+            "Description": "email distro for operations",
+            "Type": "String",
+            "AllowedPattern": "[a-zA-Z][-a-zA-Z0-9._%+]*@[-A-Za-z0-9.]+\\.[A-Za-z]{2,4}",
+            "ConstraintDescription": "an email address"
+        },
+        "DbaEmail": {
+            "Description": "email distro for operations",
+            "Type": "String",
+            "AllowedPattern": "[a-zA-Z][-a-zA-Z0-9._%+]*@[-A-Za-z0-9.]+\\.[A-Za-z]{2,4}",
+            "ConstraintDescription": "an email address"
+        }
     },
-    "DbaEmail": {
-      "Description": "email distro for operations",
-      "Type": "String",
-      "AllowedPattern": "[a-zA-Z][-a-zA-Z0-9._%+]*@[-A-Za-z0-9.]+\\.[A-Za-z]{2,4}",
-      "ConstraintDescription": "an email address"
+    "Resources": {
+        "OpsAlertsTopic": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+                "Subscription": [
+                    {
+                        "Endpoint": {
+                            "Ref": "OperatorEmail"
+                        },
+                        "Protocol": "email"
+                    }
+                ]
+            }
+        },
+        "ScalingAlertsTopic": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+                "Subscription": [
+                    {
+                        "Endpoint": {
+                            "Ref": "OperatorEmail"
+                        },
+                        "Protocol": "email"
+                    }
+                ]
+            }
+        },
+        "DbAlertsTopic": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+                "Subscription": [
+                    {
+                        "Endpoint": {
+                            "Ref": "DbaEmail"
+                        },
+                        "Protocol": "email"
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "OpsAlertsTopic": {
+            "Description": "Alerts Topic",
+            "Value": {
+                "Ref": "OpsAlertsTopic"
+            }
+        },
+        "ScalingAlertsTopic": {
+            "Description": "AutoScaling Notifications",
+            "Value": {
+                "Ref": "ScalingAlertsTopic"
+            }
+        },
+        "DbAlertsTopic": {
+            "Description": "Database Notifications",
+            "Value": {
+                "Ref": "DbAlertsTopic"
+            }
+        }
     }
-  },
-  "Resources": {
-    "OpsAlertsTopic": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {
-        "Subscription": [
-          {
-            "Endpoint": {
-              "Ref": "OperatorEmail"
-            },
-            "Protocol": "email"
-          }
-        ]
-      }
-    },
-    "ScalingAlertsTopic": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {
-        "Subscription": [
-          {
-            "Endpoint": {
-              "Ref": "OperatorEmail"
-            },
-            "Protocol": "email"
-          }
-        ]
-      }
-    },
-    "DbAlertsTopic": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {
-        "Subscription": [
-          {
-            "Endpoint": {
-              "Ref": "DbaEmail"
-            },
-            "Protocol": "email"
-          }
-        ]
-      }
-    }
-  },
-  "Outputs": {
-    "OpsAlertsTopic": {
-      "Description": "Alerts Topic",
-      "Value": {
-        "Ref": "OpsAlertsTopic"
-      }
-    },
-    "ScalingAlertsTopic": {
-      "Description": "AutoScaling Notifications",
-      "Value": {
-        "Ref": "ScalingAlertsTopic"
-      }
-    },
-    "DbAlertsTopic": {
-      "Description": "Database Notifications",
-      "Value": {
-        "Ref": "DbAlertsTopic"
-      }
-    }
-  }
 }

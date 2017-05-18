@@ -1,0 +1,7 @@
+2017-05-16T14:45:20 - Provisioning AWS environment... qa from sncrbda-mct-qa.conf
+2017-05-16T14:45:21 - Availability Zones: us-east-1a us-east-1b us-east-1c us-east-1d us-east-1e
+2017-05-16T14:45:21 - Account AZ1=us-east-1a AZ2=us-east-1b
+2017-05-16T14:45:21 - Environment: QA
+2017-05-16T14:45:21 - AWS Profile: sncr-bda
+2017-05-16T14:45:21 - Stacks to run:
+2017-05-16T14:45:21 - Completed provisioning AWS

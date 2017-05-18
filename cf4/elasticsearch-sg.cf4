@@ -1,0 +1,34 @@
+# -*- indent-tabs-mode: nil -*-
+#
+VERSION(1.4.0)
+#
+INCLUDE(cf4/sncr-cidrs.m4)
+#
+
+{
+  TEMPLATE(`SG for ElasticSearch'),
+
+  "Parameters" : {
+
+    paramVpc(VpcId, `VPC ID', `vpc-00000000'),
+    paramCidrBlock(VpcCidr, `'),
+
+    paramDomain(Domain, `app domain', `devops.dev.cloud.synchronoss.net'),
+    paramString(Project, `project',`NOPROJECT'),
+    paramString(Environment, `environment',`NOENVIRONMENT')
+
+  },
+
+  "Resources" : {
+
+    mkVpcSecurityGroup(ElasticSearchSG, &VpcId, `test server security group'),
+    addSecurityGroupRule(ElasticSearchSG, vpcicmp, in, "icmp", "-1", &VpcCidr),
+    addSecurityGroupRule(ElasticSearchSG, pabeticmp, in, "icmp", "-1", "pabetCIDR")
+
+  },
+
+  "Outputs" : {
+    output(ElasticSearchSG,`SG for ES')
+  }
+
+}
